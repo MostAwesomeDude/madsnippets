@@ -78,7 +78,7 @@ def accepts(*arg_types):
             for i, t in enumerate(args):
                 if arg_types[i] != type(args[i]):
                     raise TypeError, "Argument is %s, should be %s" \
-                        % (type(args[i]), arg_types[i])
+                        % (type(args[i]).__name__, arg_types[i].__name__)
             return f(*args, **kwargs)
         return deco
     return tempfunc
@@ -109,7 +109,7 @@ def returns(arg_type=type(None)):
             retval = f(*args, **kwargs)
             if arg_type != type(retval):
                 raise TypeError, "Return value is %s, should be %s" \
-                    % (type(retval), arg_type)
+                    % (type(retval).__name__, arg_type.__name__)
             return retval
         return deco
     return tempfunc
