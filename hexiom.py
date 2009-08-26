@@ -104,7 +104,8 @@ class Hexiom(object):
         self.rings.append(self.slots[19:37])
         self.rings.append(self.slots[37:61])
         self.rings.append(self.slots[61:91])
-        self.demangle_ring3()
+        if self.size > 2:
+            self.demangle_ring3()
         if self.size > 3:
             self.demangle_ring4()
         if self.size > 4:
