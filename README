@@ -1,1 +1,17 @@
 This is a collection of simple snippets I've accumulated during the years.
+
+decorators:
+    - This module holds an assortment of decorators.
+        - memoize
+        - trace
+        - accepts/returns
+
+hexiom:
+    - This is a simple decoder for Hexiom saved levels. It can import and
+    export, and also dump a visual of the solved level.
+    - Undocumented.
+
+whammy:
+    - This is an interface to control a Digitech Whammy pedal using MIDI. It
+    uses PyGTK for a minimal GUI and ALSA's amidi CLI tool for MIDI dispatch.
+    Highly hackish.
