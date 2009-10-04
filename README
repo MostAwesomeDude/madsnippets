@@ -11,6 +11,13 @@ hexiom:
     export, and also dump a visual of the solved level.
     - Undocumented.
 
+maths:
+    - Several useful maths that could probably be trivially reimplemented.
+    Some speed hacks are included, but these are largely unoptimized.
+        - factor
+        - gcd
+        - lcm
+
 whammy:
     - This is an interface to control a Digitech Whammy pedal using MIDI. It
     uses PyGTK for a minimal GUI and ALSA's amidi CLI tool for MIDI dispatch.
