@@ -11,6 +11,10 @@ hexiom:
     export, and also dump a visual of the solved level.
     - Undocumented.
 
+madtools:
+    - Iteration tools.
+        - unnest: Unnests arbitrary iterables.
+
 maths:
     - Several useful maths that could probably be trivially reimplemented.
     Some speed hacks are included, but these are largely unoptimized.
