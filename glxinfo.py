@@ -6,8 +6,8 @@ gl13_exts = set([
     "ARB_texture_cube_map",
     "ARB_texture_env_combine",
     "ARB_texture_env_dot3",
-    "EXT_texture_env_add",
     "ARB_transpose_matrix",
+    "EXT_texture_env_add",
 ])
 
 gl14_exts = set([
@@ -39,17 +39,17 @@ gl20_exts = set([
     "ARB_draw_buffers",
     "ARB_fragment_shader",
     "ARB_point_sprite",
-    "EXT_texture_non_power_of_two",
     "ARB_shader_objects",
     "ARB_shading_language_100",
-    "EXT_stencil_two_side",
     "ARB_vertex_shader",
+    "EXT_stencil_two_side",
+    "EXT_texture_non_power_of_two",
 ])
 
 gl21_exts = set([
+    "ARB_shading_language_120",
     "EXT_pixel_buffer_object",
     "EXT_texture_sRGB",
-    "ARB_shading_language_120",
 ])
 
 def parse_exts(ext_string):
@@ -76,7 +76,7 @@ def check_exts(exts, set_to_check, name):
         len(set_to_check) - len(missing), len(set_to_check))
     if missing:
         print " - Missing these extensions:"
-        for ext in missing:
+        for ext in sorted(missing):
             print " --- GL_%s" % ext
 
 def analyze_glxinfo(glxinfo):
