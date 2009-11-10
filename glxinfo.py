@@ -91,6 +91,10 @@ def analyze_glxinfo(glxinfo):
 
     print "Number of extensions: %d" % len(exts)
     check_exts(exts, gl13_exts, "GL 1.3")
+    check_exts(exts, gl14_exts, "GL 1.4")
+    check_exts(exts, gl15_exts, "GL 1.5")
+    check_exts(exts, gl20_exts, "GL 2.0")
+    check_exts(exts, gl21_exts, "GL 2.1")
 
 if __name__ == "__main__":
     import sys
