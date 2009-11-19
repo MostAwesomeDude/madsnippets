@@ -28,6 +28,8 @@ def print_stats(user_badges, total_badges):
     total_badges is a `BadgeDict`.
     """
 
+    print datetime.date.today().strftime("%B %d, %Y")
+
     user_count = len(user_badges)
     total_count = len(total_badges)
 
@@ -81,8 +83,3 @@ madbadges = set(i["badge_id"] for i in
     json.load(file("MostAwesomeDude.json", "r")))
 
 print_stats(madbadges, badges)
-
-# XXX debugging
-for i in badges.itervalues():
-    pprint.pprint(i)
-    break
