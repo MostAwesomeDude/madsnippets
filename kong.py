@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # Kongregate stats parser.
+# TODO:
+# ~ Get user's signup date, for calculating badges/day and completion date
 
 from __future__ import division
 
 import collections
+import datetime
 import json
 import UserDict
 
@@ -14,7 +17,7 @@ def print_percentage(label, current, total):
     Pretty-print a percentage in a uniform manner.
     """
 
-    print "%s: %d of %d (%2.2f%% complete)" % (label, current, total,
+    print "- %s: %d of %d (%2.2f%% complete)" % (label, current, total,
         (current * 100) / total)
 
 def print_stats(user_badges, total_badges):
@@ -36,6 +39,13 @@ def print_stats(user_badges, total_badges):
         if imp["id"] in user_badges)
 
     print_percentage("Impossibles", user_imp_count, imp_count)
+
+    total_points_from_badges = sum(badge["points"] for badge in
+        total_badges.itervalues()
+        if badge["id"] in user_badges)
+
+    print "- Average Points per Badge: %2.2f" % \
+        (total_points_from_badges / user_count)
 
 class BadgeDict(dict):
     def __init__(self, iterable=[]):
