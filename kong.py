@@ -8,9 +8,8 @@ from __future__ import division
 import collections
 import datetime
 import json
-import UserDict
-
-import pprint
+import sys
+import urllib2
 
 def print_percentage(label, current, total):
     """
@@ -28,6 +27,7 @@ def print_stats(user_badges, total_badges):
     total_badges is a `BadgeDict`.
     """
 
+    print "-- copy below this line --"
     print datetime.date.today().strftime("%B %d, %Y")
 
     user_count = len(user_badges)
@@ -48,6 +48,7 @@ def print_stats(user_badges, total_badges):
 
     print "- Average Points per Badge: %2.2f" % \
         (total_points_from_badges / user_count)
+    print "-- end of stats --"
 
 class BadgeDict(dict):
     def __init__(self, iterable=[]):
@@ -78,8 +79,23 @@ class BadgeDict(dict):
 
         return getattr(self, name)
 
-badges = BadgeDict(json.load(file("badges.json", "r")))
-madbadges = set(i["badge_id"] for i in
-    json.load(file("MostAwesomeDude.json", "r")))
 
-print_stats(madbadges, badges)
+if len(sys.argv) < 2:
+    print "Usage: %s <account>" % sys.argv[0]
+    sys.exit(1)
+
+account = sys.argv[1]
+
+print "Acquiring badges.json... ",
+badge_json = urllib2.urlopen("http://www.kongregate.com/badges.json").read()
+print "OK!"
+
+print "Acquiring %s's badges.json... " % account,
+account_json = urllib2.urlopen(
+    "http://www.kongregate.com/accounts/%s/badges.json" % account).read()
+print "OK!"
+
+badges = BadgeDict(json.loads(badge_json))
+user_badges = set(i["badge_id"] for i in json.loads(account_json))
+
+print_stats(user_badges, badges)
