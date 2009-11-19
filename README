@@ -9,6 +9,10 @@ decorators:
 hexiom:
     - This is a simple decoder for Hexiom saved levels. It can import and
     export, and also dump a visual of the solved level.
+    - Undocumented and unclean.
+
+kong:
+    - This is a statistics calculator and printer for Kongregate.
     - Undocumented.
 
 madtools:
@@ -25,4 +29,4 @@ maths:
 whammy:
     - This is an interface to control a Digitech Whammy pedal using MIDI. It
     uses PyGTK for a minimal GUI and ALSA's amidi CLI tool for MIDI dispatch.
-    Highly hackish.
+    Highly hackish, undocumented, unclean.
