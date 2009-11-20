@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # Kongregate stats parser.
-# TODO:
-# ~ Get user's signup date, for calculating badges/day and completion date
 
 from __future__ import division
 
