@@ -19,16 +19,21 @@ def print_percentage(label, current, total):
     print "- %s: %d of %d (%2.2f%% complete)" % (label, current, total,
         (current * 100) / total)
 
-def print_stats(user_badges, total_badges):
+def print_stats(user_badges, total_badges, start_date):
     """
     Print badge statistics.
 
     user_badges is an iterable of ints.
     total_badges is a `BadgeDict`.
+    start_date is an ISO datetime.
     """
 
+    then = datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S")
+    today = datetime.date.today()
+    day_delta = today - then.date()
+
     print "-- copy below this line --"
-    print datetime.date.today().strftime("%B %d, %Y")
+    print today.strftime("%B %d, %Y")
 
     user_count = len(user_badges)
     total_count = len(total_badges)
@@ -46,8 +51,12 @@ def print_stats(user_badges, total_badges):
         total_badges.itervalues()
         if badge["id"] in user_badges)
 
-    print "- Average Points per Badge: %2.2f" % \
+    print "- Average Points per Badge: %.2f" % \
         (total_points_from_badges / user_count)
+
+    print "- Average Badges per Day: %.2f" % \
+        (user_count / day_delta.days)
+
     print "-- end of stats --"
 
 class BadgeDict(dict):
@@ -90,12 +99,18 @@ print "Acquiring badges.json... ",
 badge_json = urllib2.urlopen("http://www.kongregate.com/badges.json").read()
 print "OK!"
 
-print "Acquiring %s's badges.json... " % account,
+print "Acquiring %s.json... " % account,
 account_json = urllib2.urlopen(
+    "http://www.kongregate.com/accounts/%s.json" % account).read()
+print "OK!"
+
+print "Acquiring %s's badges.json... " % account,
+account_badges_json = urllib2.urlopen(
     "http://www.kongregate.com/accounts/%s/badges.json" % account).read()
 print "OK!"
 
 badges = BadgeDict(json.loads(badge_json))
-user_badges = set(i["badge_id"] for i in json.loads(account_json))
+user_badges = set(i["badge_id"] for i in json.loads(account_badges_json))
+user_join_date = json.loads(account_json)["created_at"]
 
-print_stats(user_badges, badges)
+print_stats(user_badges, badges, user_join_date)
