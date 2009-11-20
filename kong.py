@@ -54,8 +54,14 @@ def print_stats(user_badges, total_badges, start_date):
     print "- Average Points per Badge: %.2f" % \
         (total_points_from_badges / user_count)
 
-    print "- Average Badges per Day: %.2f" % \
-        (user_count / day_delta.days)
+    badges_per_day = user_count / day_delta.days
+
+    print "- Average Badges per Day: %.2f" % badges_per_day
+
+    days_remaining = (total_count - user_count) / badges_per_day
+
+    print "- Estimated date of completion: %s" % \
+        (today + datetime.timedelta(days_remaining)).strftime("%B %d, %Y")
 
     print "-- end of stats --"
 
