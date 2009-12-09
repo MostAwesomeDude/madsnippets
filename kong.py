@@ -38,12 +38,14 @@ def print_stats(user_badges, total_badges, start_date):
 
     print_percentage("Acquired Badges", user_count, total_count)
 
-    imp_count = total_badges.count_by_difficulty()["impossible"]
-    user_imp_count = sum(1 for imp in
-        total_badges.iter_by_difficulty("impossible")
-        if imp["id"] in user_badges)
+    for difficulty in ("easy", "medium", "hard", "impossible"):
+        difficulty_count = total_badges.count_by_difficulty()[difficulty]
+        user_difficulty_count = sum(1 for chaff in
+            total_badges.iter_by_difficulty(difficulty)
+            if chaff["id"] in user_badges)
 
-    print_percentage("Impossibles", user_imp_count, imp_count)
+        print_percentage("%ss" % difficulty.capitalize(),
+            user_difficulty_count, difficulty_count)
 
     total_points_from_badges = sum(badge["points"] for badge in
         total_badges.itervalues()
