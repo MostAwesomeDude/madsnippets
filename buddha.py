@@ -11,6 +11,8 @@ import Image
 HEIGHT = 1050
 WIDTH = 1680
 
+# Min and max iterations
+SETD = 20
 SETI = 50000
 
 MINH = -1.1
@@ -84,7 +86,10 @@ for i in xrange(SETI):
         if not abs(d[c]) <= 2 or not 0 <= pixh < HEIGHT or not 0 <= pixw < WIDTH:
             keystodel.append(c)
     deletedkeys += len(keystodel)
-    [keystokeep.append(d.pop(key)) for key in keystodel]
+    if i > SETD:
+        [keystokeep.append(d.pop(key)) for key in keystodel]
+    else:
+        [d.pop(key) for key in keystodel]
 
 temp = {}
 
