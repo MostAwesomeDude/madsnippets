@@ -5,6 +5,7 @@ from __future__ import division
 import itertools
 import random
 import sys
+import time
 
 import Image
 
@@ -41,20 +42,13 @@ def checkrange(c):
 
     return True
 
-def update(string, prevlen=[0]):
-    if prevlen[0]:
-        sys.stdout.write("\b"*prevlen[0])
-    else:
-        sys.stdout.write("\n")
-    sys.stdout.write(string)
-    sys.stdout.flush()
-    prevlen[0] = len(string)
-
-update("Making pixel array...", [0])
+print "Making pixel array..."
 
 pixels = [[0 for j in xrange(WIDTH)] for i in xrange(HEIGHT)]
 
-update("Getting started...")
+print "Getting started..."
+
+t = time.time()
 
 try:
     total, plotted, skipped = 0, 0, 0
@@ -90,27 +84,30 @@ try:
                 i -= 1
 
         total += 1
-        if not total % 10:
-            update("Points (plotted/skipped/total): %d/%d/%d" %
+        if not total % 1000:
+            print ("Points (plotted/skipped/total): %d/%d/%d" %
                 (plotted, skipped, total))
 
 except KeyboardInterrupt:
-    update("Total of %d points, skipped %d (%.2f%%) plotted %d (%.2f%%)" %
-        (plotted, skipped, skipped*100/total, plotted, plotted*100/total), [0])
+    print ("Total of %d points, skipped %d (%.2f%%) plotted %d (%.2f%%)" %
+        (total, skipped, skipped*100/total, plotted, plotted*100/total))
+
+elapsed = time.time() - t
+print "Elapsed time: %.2fs (plotted %.2f/s)" % (elapsed, plotted/elapsed)
 
 maxdepth = 0
 
-update("Calculating max depth...", [0])
+print "Calculating max depth..."
 
 for (i, j) in itertools.product(xrange(HEIGHT), xrange(WIDTH)):
     if pixels[i][j] > maxdepth:
         maxdepth = pixels[i][j]
 
-update("Max depth is %d" % maxdepth, [0])
+print "Max depth is %d" % maxdepth
 
 out = Image.new("RGB",(HEIGHT,WIDTH))
 
-update("Plotting...", [0])
+print "Plotting..."
 
 def get_color(value):
     v = int(value * 255)
@@ -123,15 +120,17 @@ def get_color(value):
     elif value > 0.6:
         return (v, 255, v) # greens
     elif value > 0.4:
-        return (204, v, v) # reds
+        return (204, v + 51, v + 51) # reds
     elif value > 0.2:
-        return (v, v - 51, 102) # blues
+        return (v + 102, v + 51, 102) # blues
+    elif value:
+        return (v + 51, v + 51, v + 51) # grays
     else:
-        return (v, v, v) # grays
+        return (0, 0, 0) # blacks
 
 for (i, j) in itertools.product(xrange(HEIGHT), xrange(WIDTH)):
     value = pixels[i][j] / maxdepth
     out.putpixel((i,j), get_color(value))
 
 out.save(FILENAME)
-update("Done!", [0])
+print "Done!"
