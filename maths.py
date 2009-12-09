@@ -67,3 +67,13 @@ def lazyfactor(x):
         if prime:
             yield x
             break
+
+def mma(old, new, weight):
+    """
+    Performs a Moving Modified Average, using the old value, new value,
+    and a weight.
+
+    Weight must be greater than zero.
+    """
+
+    return ((weight - 1) * old + new) / weight
