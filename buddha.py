@@ -16,7 +16,8 @@ MAXH = 1.1
 MINW = -2.2
 MAXW = 1.1
 
-COUNT = 100000
+COUNT = 50000
+PLOTGOAL = 10000
 
 FILENAME = "buddha.png"
 
@@ -57,7 +58,7 @@ update("Getting started...")
 
 try:
     total, plotted, skipped = 0, 0, 0
-    while True:
+    while plotted < PLOTGOAL:
         c = complex(random.uniform(MINW, MAXW), random.uniform(MINH, MAXH))
         i = 0
         if not checkrange(c):
@@ -75,7 +76,7 @@ try:
             pixw = (z.real - MINW) * WIDTH/(MAXW-MINW)
             i += 1
 
-        if 20 < i < COUNT:
+        if 10 < i < COUNT:
             plotted += 1
             z = c
             pixh, pixw = 0, 0
@@ -94,8 +95,8 @@ try:
                 (plotted, skipped, total))
 
 except KeyboardInterrupt:
-    update("Total of %d points, skipped %d (%.2f) plotted %d (%.2f)" %
-        (plotted, skipped, skipped*100/total, plotted, plotted*100/total))
+    update("Total of %d points, skipped %d (%.2f%%) plotted %d (%.2f%%)" %
+        (plotted, skipped, skipped*100/total, plotted, plotted*100/total), [0])
 
 maxdepth = 0
 
@@ -107,30 +108,29 @@ for (i, j) in itertools.product(xrange(HEIGHT), xrange(WIDTH)):
 
 update("Max depth is %d" % maxdepth, [0])
 
-depthfix = maxdepth/255 if maxdepth/255 else 1
-
 out = Image.new("RGB",(HEIGHT,WIDTH))
 
 update("Plotting...", [0])
 
 def get_color(value):
-    if value > 250:
+    v = int(value * 255)
+    if value > 0.95:
         return (255, 51, 204) # violet
-    elif value > 220:
+    elif value > 0.9:
         return (255, 204, 0) # gold
-    elif value > 200:
+    elif value > 0.8:
         return (255, 255, 204) # silver
-    elif value > 150:
-        return (value, 255, value) # greens
-    elif value > 100:
-        return (204, value, value) # reds
-    elif value > 50:
-        return (value, value - 51, 102) # blues
+    elif value > 0.6:
+        return (v, 255, v) # greens
+    elif value > 0.4:
+        return (204, v, v) # reds
+    elif value > 0.2:
+        return (v, v - 51, 102) # blues
     else:
-        return (value, value, value) # grays
+        return (v, v, v) # grays
 
 for (i, j) in itertools.product(xrange(HEIGHT), xrange(WIDTH)):
-    value = int(pixels[i][j]/depthfix)
+    value = pixels[i][j] / maxdepth
     out.putpixel((i,j), get_color(value))
 
 out.save(FILENAME)
