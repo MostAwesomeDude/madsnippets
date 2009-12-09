@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import division
+
 import itertools
 import pickle
 
@@ -24,6 +26,14 @@ def get_color(value):
     else:
         return (0, 0, 0) # blacks
 
+def fair_color(value):
+    v = int(value * 767)
+    r = max(v - 512, 0)
+    g = min(255, max(v - 256, 0))
+    b = min(255, v)
+
+    return (r, g, b)
+
 pixels = pickle.load(open("buddha.P", "r"))
 
 HEIGHT, WIDTH = len(pixels), len(pixels[0])
@@ -44,6 +54,7 @@ print "Max depth is %d" % maxdepth
 
 for (i, j) in itertools.product(xrange(HEIGHT), xrange(WIDTH)):
     value = pixels[i][j] / maxdepth
-    out.putpixel((i,j), get_color(value))
+    out.putpixel((i, j), get_color(value))
+    #out.putpixel((i, j), fair_color(value))
 
 out.save("buddha.png")

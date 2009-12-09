@@ -17,7 +17,7 @@ MINW = -2.2
 MAXW = 1.1
 
 COUNT = 50000
-PLOTGOAL = 10000
+PLOTGOAL = 50000
 
 FILENAME = "buddha.png"
 
@@ -60,8 +60,8 @@ try:
             continue
         z = c
         pixh, pixw = 0, 0
-        while (i < COUNT and abs(c) <= 2 and
-            0 <= pixh < HEIGHT and 0 <= pixw < WIDTH):
+        while (abs(c) <= 2 and
+            0 <= pixh < HEIGHT and 0 <= pixw < WIDTH and i < COUNT):
 
             z = z**2 + c
 
@@ -69,7 +69,7 @@ try:
             pixw = (z.real - MINW) * WIDTH/(MAXW-MINW)
             i += 1
 
-        if 10 < i < COUNT:
+        if 15 < i < COUNT:
             plotted += 1
             z = c
             pixh, pixw = 0, 0
