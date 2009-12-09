@@ -11,16 +11,12 @@ import Image
 HEIGHT = 1050
 WIDTH = 1680
 
-# Min and max iterations
-SETD = 20
-SETI = 50000
-
 MINH = -1.1
 MAXH = 1.1
 MINW = -2.2
 MAXW = 1.1
 
-COUNT = 50000
+COUNT = 100000
 
 FILENAME = "buddha.png"
 
@@ -35,11 +31,11 @@ invalid_ranges = (
     (0.14, 0.29, 0.07, 0.42),
 )
 
-def checkrange(i, j):
+def checkrange(c):
     # Borrowed from Evercat on Wikipedia
 
     for (mini, maxi, minj, maxj) in invalid_ranges:
-        if mini < i <= maxi and minj < abs(j) < maxj:
+        if mini < c.real <= maxi and minj < abs(c.imag) < maxj:
             return False
 
     return True
@@ -53,75 +49,53 @@ def update(string, prevlen=[0]):
     sys.stdout.flush()
     prevlen[0] = len(string)
 
-def genrandom():
-    d = {}
-    count = 0
-    while len(d) < COUNT:
-        (i, j) = (random.uniform(MINW, MAXW), random.uniform(MINH, MAXH))
-        if checkrange(i, j):
-            d[complex(i, j)] = complex(0)
-        else:
-            count += 1
-    update("Generated %d, trimmed %d initial values" % (len(d), count), [0])
-    return d
+update("Making pixel array...", [0])
 
 pixels = [[0 for j in xrange(WIDTH)] for i in xrange(HEIGHT)]
 
-update("Preparing...", [0])
+update("Getting started...")
 
-d = genrandom()
+try:
+    total, plotted, skipped = 0, 0, 0
+    while True:
+        c = complex(random.uniform(MINW, MAXW), random.uniform(MINH, MAXH))
+        i = 0
+        if not checkrange(c):
+            total += 1
+            skipped += 1
+            continue
+        z = c
+        pixh, pixw = 0, 0
+        while (i < COUNT and abs(c) <= 2 and
+            0 <= pixh < HEIGHT and 0 <= pixw < WIDTH):
 
-keystokeep = []
+            z = z**2 + c
 
-deletedkeys = 0
-totalkeys = len(d)
+            pixh = (z.imag - MINH) * HEIGHT/(MAXH-MINH)
+            pixw = (z.real - MINW) * WIDTH/(MAXW-MINW)
+            i += 1
 
-for i in xrange(SETI):
-    update("Set: %d/%d Divergents: %d/%d Remaining: %d" % (i + 1, SETI, deletedkeys, totalkeys, len(d)))
-    keystodel = []
-    for (c, z) in d.iteritems():
-        d[c] = complex(z**2 + c)
-        pixh = int((d[c].imag - MINH) * HEIGHT/(MAXH-MINH))
-        pixw = int((d[c].real - MINW) * WIDTH/(MAXW-MINW))
-        if not abs(d[c]) <= 2 or not 0 <= pixh < HEIGHT or not 0 <= pixw < WIDTH:
-            keystodel.append(c)
-    deletedkeys += len(keystodel)
-    if i > SETD:
-        [keystokeep.append(d.pop(key)) for key in keystodel]
-    else:
-        [d.pop(key) for key in keystodel]
+        if 20 < i < COUNT:
+            plotted += 1
+            z = c
+            pixh, pixw = 0, 0
+            i -= 1
 
-temp = {}
+            while i:
+                z = z**2 + c
+                pixh = int((z.imag - MINH) * HEIGHT/(MAXH-MINH))
+                pixw = int((z.real - MINW) * WIDTH/(MAXW-MINW))
+                pixels[pixh][pixw] += 1
+                i -= 1
 
-for key in keystokeep:
-    temp[key] = complex(0)
+        total += 1
+        if not total % 10:
+            update("Points (plotted/skipped/total): %d/%d/%d" %
+                (plotted, skipped, total))
 
-d = temp
-update("Will trace %d divergents" % len(d), [0])
-
-update("Calculating...", [0])
-totalkeys = len(d)
-deletedkeys = 0
-
-i = 0
-
-while d:
-    update("Buddha: %d/? Divergents: %d/%d" % (i, deletedkeys, totalkeys))
-    keystodel = []
-    for (c, z) in d.iteritems():
-        d[c] = complex(z**2 + c)
-        pixh = int((d[c].imag - MINH) * HEIGHT/(MAXH-MINH))
-        pixw = int((d[c].real - MINW) * WIDTH/(MAXW-MINW))
-        if 0 <= pixh < HEIGHT and 0 <= pixw < WIDTH:
-            pixels[pixh][pixw] += 1
-        else:
-            keystodel.append(c)
-    deletedkeys += len(keystodel)
-    for key in keystodel:
-        del d[key]
-    i += 1
-
-update("No more divergents, exiting...", [0])
+except KeyboardInterrupt:
+    update("Total of %d points, skipped %d (%.2f) plotted %d (%.2f)" %
+        (plotted, skipped, skipped*100/total, plotted, plotted*100/total))
 
 maxdepth = 0
 
@@ -130,17 +104,34 @@ update("Calculating max depth...", [0])
 for (i, j) in itertools.product(xrange(HEIGHT), xrange(WIDTH)):
     if pixels[i][j] > maxdepth:
         maxdepth = pixels[i][j]
-        update("Depth of %d at %d,%d" % (maxdepth, i, j))
+
+update("Max depth is %d" % maxdepth, [0])
 
 depthfix = maxdepth/255 if maxdepth/255 else 1
 
 out = Image.new("RGB",(HEIGHT,WIDTH))
 
+update("Plotting...", [0])
+
+def get_color(value):
+    if value > 250:
+        return (255, 51, 204) # violet
+    elif value > 220:
+        return (255, 204, 0) # gold
+    elif value > 200:
+        return (255, 255, 204) # silver
+    elif value > 150:
+        return (value, 255, value) # greens
+    elif value > 100:
+        return (204, value, value) # reds
+    elif value > 50:
+        return (value, value - 51, 102) # blues
+    else:
+        return (value, value, value) # grays
+
 for (i, j) in itertools.product(xrange(HEIGHT), xrange(WIDTH)):
     value = int(pixels[i][j]/depthfix)
-    out.putpixel((i,j),(value, value, value))
-#    pix = (pixels[i][j] - 511, pixels[i][j] - 255, pixels[i][j])
-#    out.putpixel((i,j), pix)
+    out.putpixel((i,j), get_color(value))
 
 out.save(FILENAME)
 update("Done!", [0])
