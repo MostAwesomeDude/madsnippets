@@ -8,16 +8,30 @@ import random
 import sys
 import time
 
-HEIGHT = 1050
-WIDTH = 1680
+widescreen = False
 
-MINH = -1.1
-MAXH = 1.1
-MINW = -2.2
-MAXW = 1.1
+if widescreen:
+    HEIGHT = 1050
+    WIDTH = 1680
+
+    MINH = -1.0
+    MAXH = 1.0
+    MINW = -2.0
+    MAXW = 1.2
+else:
+    HEIGHT = 768
+    WIDTH = 1024
+
+    MINH = -1.0
+    MAXH = 1.0
+    MINW = -2.0
+    MAXW = 0.66
+
+HEIGHT *= 2
+WIDTH *= 2
 
 COUNT = 50000
-PLOTGOAL = 50000
+PLOTGOAL = 100000
 
 FILENAME = "buddha.png"
 
@@ -59,27 +73,21 @@ try:
             skipped += 1
             continue
         z = c
-        pixh, pixw = 0, 0
-        while (abs(c) <= 2 and
-            0 <= pixh < HEIGHT and 0 <= pixw < WIDTH and i < COUNT):
-
+        while abs(c) <= 2 and i < COUNT:
             z = z**2 + c
-
-            pixh = (z.imag - MINH) * HEIGHT/(MAXH-MINH)
-            pixw = (z.real - MINW) * WIDTH/(MAXW-MINW)
             i += 1
 
-        if 15 < i < COUNT:
+        if 15 < i <= COUNT:
             plotted += 1
-            z = c
-            pixh, pixw = 0, 0
-            i -= 1
+            z = c**2 + c
+            pixh = int((z.imag - MINH) * HEIGHT/(MAXH-MINH))
+            pixw = int((z.real - MINW) * WIDTH/(MAXW-MINW))
 
-            while i:
+            while i and (0 <= pixh < HEIGHT) and (0 <= pixw < WIDTH):
                 z = z**2 + c
+                pixels[pixh][pixw] += 1
                 pixh = int((z.imag - MINH) * HEIGHT/(MAXH-MINH))
                 pixw = int((z.real - MINW) * WIDTH/(MAXW-MINW))
-                pixels[pixh][pixw] += 1
                 i -= 1
 
         total += 1
@@ -94,7 +102,7 @@ except KeyboardInterrupt:
 elapsed = time.time() - t
 print "Elapsed time: %.2fs (plotted %.2f/s)" % (elapsed, plotted/elapsed)
 
-print "Plotting..."
+print "Dumping..."
 
 pickle.dump(pixels, open("buddha.P", "w"))
 

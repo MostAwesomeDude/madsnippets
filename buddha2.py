@@ -57,4 +57,7 @@ for (i, j) in itertools.product(xrange(HEIGHT), xrange(WIDTH)):
     out.putpixel((i, j), get_color(value))
     #out.putpixel((i, j), fair_color(value))
 
+print "Resampling..."
+
+out = out.resize((HEIGHT//2, WIDTH//2), Image.ANTIALIAS)
 out.save("buddha.png")
