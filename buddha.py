@@ -12,14 +12,13 @@ HEIGHT = 1050
 WIDTH = 1680
 
 SETI = 50000
-BUDDHAI = 50000
 
 MINH = -1.1
 MINW = -2.2
 MAXH = 1.1
 MAXW = 1.1
 
-RESOLUTION = 0.05
+COUNT = 1000
 
 FILENAME = "buddha.png"
 
@@ -55,34 +54,23 @@ def update(string, prevlen=[0]):
     sys.stdout.flush()
     prevlen[0] = len(string)
 
-def genrandom(resolution):
+def genrandom():
     d = {}
-    HSTEPS = int((MAXH-MINH)/resolution)
-    WSTEPS = int((MAXW-MINW)/resolution)
     count = 0
-    while len(d) < (HSTEPS*WSTEPS):
+    while len(d) < COUNT:
         (i, j) = (random.uniform(MINW, MAXW), random.uniform(MINH, MAXH))
         if checkrange(i, j):
             d[complex(i, j)] = complex(0)
         else:
             count += 1
-    print "Generated %d, trimmed %d initial values" % (HSTEPS*WSTEPS, count)
+    print "Generated %d, trimmed %d initial values" % (len(d), count)
     return d
-
-parser = optparse.OptionParser()
-parser.add_option("-r", "--resolution", dest="resolution", type="float",
-    help="Set resolution to FLOAT", metavar="FLOAT")
-
-(opts, args) = parser.parse_args()
-
-if opts.resolution:
-    RESOLUTION = opts.resolution
 
 pixels = [[0 for j in xrange(WIDTH)] for i in xrange(HEIGHT)]
 
 update("Preparing...", [0])
 
-d = genrandom(RESOLUTION)
+d = genrandom()
 
 keystokeep = []
 
@@ -119,12 +107,11 @@ update("Calculating...", [0])
 totalkeys = len(d)
 deletedkeys = 0
 
-for i in range(BUDDHAI):
-    update("Buddha: %d/%d Divergents: %d/%d" % (i + 1, BUDDHAI, deletedkeys, totalkeys))
+i = 0
+
+while d:
+    update("Buddha: %d/? Divergents: %d/%d" % (i, deletedkeys, totalkeys))
     keystodel = []
-    if not d:
-        update("No more divergents, exiting early...", [0])
-        break
     for (c, z) in d.iteritems():
         d[c] = complex(z**2 + c)
         try:
@@ -138,6 +125,9 @@ for i in range(BUDDHAI):
     for key in keystodel:
         deletedkeys += 1
         del d[key]
+    i += 1
+
+update("No more divergents, exiting...", [0])
 
 maxdepth = 0
 
