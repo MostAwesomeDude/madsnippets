@@ -11,24 +11,24 @@ import time
 widescreen = False
 
 if widescreen:
-    HEIGHT = 1050
-    WIDTH = 1680
+    WIDTH = 1050
+    HEIGHT = 1680
 
-    MINH = -1.0
-    MAXH = 1.0
-    MINW = -2.0
-    MAXW = 1.2
+    MINW = -1.0
+    MAXW = 1.0
+    MINH = -2.0
+    MAXH = 1.2
 else:
-    HEIGHT = 768
-    WIDTH = 1024
+    WIDTH = 768
+    HEIGHT = 1024
 
-    MINH = -1.0
-    MAXH = 1.0
-    MINW = -2.0
-    MAXW = 0.66
+    MINW = -1.0
+    MAXW = 1.0
+    MINH = -2.0
+    MAXH = 0.66
 
-HEIGHT *= 2
 WIDTH *= 2
+HEIGHT *= 2
 
 COUNT = 20000
 PLOTGOAL = 100000
@@ -67,7 +67,7 @@ def mma(old, new, weight=100):
 
 print "Making pixel array..."
 
-pixels = [[0 for j in xrange(WIDTH)] for i in xrange(HEIGHT)]
+pixels = [[0 for j in xrange(HEIGHT)] for i in xrange(WIDTH)]
 
 print "Getting started..."
 
@@ -76,14 +76,14 @@ t = time.time()
 try:
     total, plotted, skipped, avg_iters = 0, 0, 0, 0
     while plotted < PLOTGOAL:
-        c = complex(random.uniform(MINW, MAXW), random.uniform(MINH, MAXH))
+        c = complex(random.uniform(MINH, MAXH), random.uniform(MINW, MAXW))
         i = 0
         if not checkrange(c):
             total += 1
             skipped += 1
             continue
         z = c
-        while MINH < z.imag < MAXH and MINW < z.real < MAXW and i < COUNT:
+        while MINH < z.real < MAXH and MINW < z.imag < MAXW and i < COUNT:
             z = z**2 + c
             i += 1
 
@@ -94,14 +94,14 @@ try:
 
         plotted += 1
         z = c**2 + c
-        pixh = int((z.imag - MINH) * HEIGHT/(MAXH-MINH))
-        pixw = int((z.real - MINW) * WIDTH/(MAXW-MINW))
+        pixw = int((z.imag - MINW) * WIDTH/(MAXW-MINW))
+        pixh = int((z.real - MINH) * HEIGHT/(MAXH-MINH))
 
-        while i and (0 <= pixh < HEIGHT) and (0 <= pixw < WIDTH):
+        while i and (0 <= pixw < WIDTH) and (0 <= pixh < HEIGHT):
             z = z**2 + c
-            pixels[pixh][pixw] += 1
-            pixh = int((z.imag - MINH) * HEIGHT/(MAXH-MINH))
-            pixw = int((z.real - MINW) * WIDTH/(MAXW-MINW))
+            pixels[pixw][pixh] += 1
+            pixw = int((z.imag - MINW) * WIDTH/(MAXW-MINW))
+            pixh = int((z.real - MINH) * HEIGHT/(MAXH-MINH))
             i -= 1
 
         total += 1

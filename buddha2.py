@@ -36,28 +36,28 @@ def fair_color(value):
 
 pixels = pickle.load(open("buddha.P", "r"))
 
-HEIGHT, WIDTH = len(pixels), len(pixels[0])
+WIDTH, HEIGHT = len(pixels), len(pixels[0])
 
-print "Loaded %dx%d array of values!" % (HEIGHT, WIDTH)
+print "Loaded %dx%d array of values!" % (WIDTH, HEIGHT)
 
-out = Image.new("RGB",(HEIGHT,WIDTH))
+out = Image.new("RGB",(WIDTH, HEIGHT))
 
 maxdepth = 0
 
 print "Calculating max depth..."
 
-for (i, j) in itertools.product(xrange(HEIGHT), xrange(WIDTH)):
+for (i, j) in itertools.product(xrange(WIDTH), xrange(HEIGHT)):
     if pixels[i][j] > maxdepth:
         maxdepth = pixels[i][j]
 
 print "Max depth is %d" % maxdepth
 
-for (i, j) in itertools.product(xrange(HEIGHT), xrange(WIDTH)):
+for (i, j) in itertools.product(xrange(WIDTH), xrange(HEIGHT)):
     value = pixels[i][j] / maxdepth
     #out.putpixel((i, j), get_color(value))
     out.putpixel((i, j), fair_color(value))
 
 print "Resampling..."
 
-out = out.resize((HEIGHT//2, WIDTH//2), Image.ANTIALIAS)
+out = out.resize((WIDTH//2, HEIGHT//2), Image.ANTIALIAS)
 out.save("buddha.png")
