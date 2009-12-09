@@ -29,8 +29,8 @@ def get_color(value):
 def fair_color(value):
     v = int(value * 767)
     r = max(v - 512, 0)
-    g = min(255, max(v - 256, 0))
-    b = min(255, v)
+    g = min(255, v)
+    b = min(255, max(v - 256, 0))
 
     return (r, g, b)
 
@@ -54,8 +54,8 @@ print "Max depth is %d" % maxdepth
 
 for (i, j) in itertools.product(xrange(HEIGHT), xrange(WIDTH)):
     value = pixels[i][j] / maxdepth
-    out.putpixel((i, j), get_color(value))
-    #out.putpixel((i, j), fair_color(value))
+    #out.putpixel((i, j), get_color(value))
+    out.putpixel((i, j), fair_color(value))
 
 print "Resampling..."
 

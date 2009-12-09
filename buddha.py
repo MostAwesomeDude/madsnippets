@@ -30,7 +30,7 @@ else:
 HEIGHT *= 2
 WIDTH *= 2
 
-COUNT = 50000
+COUNT = 20000
 PLOTGOAL = 100000
 
 FILENAME = "buddha.png"
@@ -55,6 +55,16 @@ def checkrange(c):
 
     return True
 
+def mma(old, new, weight=100):
+    """
+    Performs a Moving Modified Average, using the old value, new value,
+    and a weight.
+
+    Weight must be greater than zero.
+    """
+
+    return ((weight - 1) * old + new) / weight
+
 print "Making pixel array..."
 
 pixels = [[0 for j in xrange(WIDTH)] for i in xrange(HEIGHT)]
@@ -64,7 +74,7 @@ print "Getting started..."
 t = time.time()
 
 try:
-    total, plotted, skipped = 0, 0, 0
+    total, plotted, skipped, avg_iters = 0, 0, 0, 0
     while plotted < PLOTGOAL:
         c = complex(random.uniform(MINW, MAXW), random.uniform(MINH, MAXH))
         i = 0
@@ -73,27 +83,31 @@ try:
             skipped += 1
             continue
         z = c
-        while abs(c) <= 2 and i < COUNT:
+        while MINH < z.imag < MAXH and MINW < z.real < MAXW and i < COUNT:
             z = z**2 + c
             i += 1
 
-        if 15 < i <= COUNT:
-            plotted += 1
-            z = c**2 + c
+        if i < 10 or i == COUNT:
+            continue
+
+        avg_iters = mma(avg_iters, i)
+
+        plotted += 1
+        z = c**2 + c
+        pixh = int((z.imag - MINH) * HEIGHT/(MAXH-MINH))
+        pixw = int((z.real - MINW) * WIDTH/(MAXW-MINW))
+
+        while i and (0 <= pixh < HEIGHT) and (0 <= pixw < WIDTH):
+            z = z**2 + c
+            pixels[pixh][pixw] += 1
             pixh = int((z.imag - MINH) * HEIGHT/(MAXH-MINH))
             pixw = int((z.real - MINW) * WIDTH/(MAXW-MINW))
-
-            while i and (0 <= pixh < HEIGHT) and (0 <= pixw < WIDTH):
-                z = z**2 + c
-                pixels[pixh][pixw] += 1
-                pixh = int((z.imag - MINH) * HEIGHT/(MAXH-MINH))
-                pixw = int((z.real - MINW) * WIDTH/(MAXW-MINW))
-                i -= 1
+            i -= 1
 
         total += 1
         if not total % 1000:
-            print ("Points (plotted/skipped/total): %d/%d/%d" %
-                (plotted, skipped, total))
+            print ("Points (plotted/skipped/total): %d/%d/%d Avg. iters. %d" %
+                (plotted, skipped, total, avg_iters))
 
 except KeyboardInterrupt:
     print ("Total of %d points, skipped %d (%.2f%%) plotted %d (%.2f%%)" %
