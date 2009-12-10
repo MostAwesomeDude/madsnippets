@@ -11,27 +11,27 @@ import time
 widescreen = False
 
 if widescreen:
-    WIDTH = 1050
-    HEIGHT = 1680
+    WIDTH = 1680
+    HEIGHT = 1050
 
-    MINW = -1.0
-    MAXW = 1.0
-    MINH = -2.0
-    MAXH = 1.2
+    MINW = -2.0
+    MAXW = 2.0
+    MINH = -1.6
+    MAXH = 0.9
 else:
-    WIDTH = 768
-    HEIGHT = 1024
+    WIDTH = 1024
+    HEIGHT = 768
 
-    MINW = -1.0
-    MAXW = 1.0
-    MINH = -2.0
-    MAXH = 0.66
+    MINW = -1.6
+    MAXW = 1.6
+    MINH = -1.6
+    MAXH = 0.8
 
 WIDTH *= 2
 HEIGHT *= 2
 
 COUNT = 20000
-PLOTGOAL = 100000
+PLOTGOAL = 500000
 
 FILENAME = "buddha.png"
 
@@ -87,7 +87,7 @@ try:
             z = z**2 + c
             i += 1
 
-        if i < 10 or i == COUNT:
+        if i < 20 or i == COUNT:
             continue
 
         avg_iters = mma(avg_iters, i)

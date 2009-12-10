@@ -9,11 +9,11 @@ import Image
 
 def get_color(value):
     v = int(value * 255)
-    if value > 0.95:
+    if value > 0.9:
         return (255, 51, 204) # violet
-    elif value > 0.9:
-        return (255, 204, 0) # gold
     elif value > 0.8:
+        return (255, 204, 0) # gold
+    elif value > 0.7:
         return (255, 255, 204) # silver
     elif value > 0.6:
         return (v, 255, v) # greens
@@ -21,13 +21,13 @@ def get_color(value):
         return (204, v + 51, v + 51) # reds
     elif value > 0.2:
         return (v + 102, v + 51, 102) # blues
-    elif value:
+    elif value > 0.05:
         return (v + 51, v + 51, v + 51) # grays
     else:
         return (0, 0, 0) # blacks
 
 def fair_color(value):
-    v = int(value * 767)
+    v = int(value * 768)
     r = max(v - 512, 0)
     g = min(255, v)
     b = min(255, max(v - 256, 0))
@@ -46,9 +46,7 @@ maxdepth = 0
 
 print "Calculating max depth..."
 
-for (i, j) in itertools.product(xrange(WIDTH), xrange(HEIGHT)):
-    if pixels[i][j] > maxdepth:
-        maxdepth = pixels[i][j]
+maxdepth = max(max(j for j in i) for i in pixels)
 
 print "Max depth is %d" % maxdepth
 
