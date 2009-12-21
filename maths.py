@@ -3,6 +3,11 @@ import math
 def gcd(a, b):
     """
     Return the greatest common divisor of a and b.
+
+    >>> gcd(3, 6)
+    3
+    >>> gcd(19872, 526293)
+    9
     """
 
     if not a:
@@ -21,6 +26,11 @@ def gcd(a, b):
 def lcm(*args):
     """
     Return the least common denominator of the inputs.
+
+    >>> lcm(27, 9, 3)
+    27
+    >>> lcm(2384, 2179)
+    5194736
     """
 
     numbers = set(int(i) for i in args)
@@ -41,6 +51,7 @@ def lcm(*args):
 def factor(x):
     """
     Returns a list of factors of x, excluding 1.
+
     >>> factor(12)
     [2, 2, 3]
     >>> factor(127)
