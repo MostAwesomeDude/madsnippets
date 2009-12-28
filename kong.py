@@ -14,10 +14,10 @@ def print_percentage(label, current, total):
     Pretty-print a percentage in a uniform manner.
     """
 
-    print "- %s: %d of %d (%2.2f%% complete)" % (label, current, total,
+    print "- %s: %d of %d (%2.2f%%)" % (label, current, total,
         (current * 100) / total)
 
-def print_stats(user_badges, total_badges, start_date):
+def print_stats(user_badges, total_badges, account):
     """
     Print badge statistics.
 
@@ -26,6 +26,7 @@ def print_stats(user_badges, total_badges, start_date):
     start_date is an ISO datetime.
     """
 
+    start_date = account["created_at"]
     then = datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S")
     today = datetime.date.today()
     day_delta = today - then.date()
@@ -50,6 +51,9 @@ def print_stats(user_badges, total_badges, start_date):
     total_points_from_badges = sum(badge["points"] for badge in
         total_badges.itervalues()
         if badge["id"] in user_badges)
+
+    print_percentage("Points from Badges", total_points_from_badges,
+        account["points"])
 
     print "- Average Points per Badge: %.2f" % \
         (total_points_from_badges / user_count)
@@ -101,22 +105,21 @@ if len(sys.argv) < 2:
 
 account = sys.argv[1]
 
-print "Acquiring badges.json... ",
-badge_json = urllib2.urlopen("http://www.kongregate.com/badges.json").read()
-print "OK!"
+def acquire_json(name, d={}):
+    if name not in d:
+        print "Acquiring %s..." % name,
+        d[name] = urllib2.urlopen("http://www.kongregate.com/%s.json" % name).read()
+        print "OK!"
+    return d[name]
 
-print "Acquiring %s.json... " % account,
-account_json = urllib2.urlopen(
-    "http://www.kongregate.com/accounts/%s.json" % account).read()
-print "OK!"
+badge_json = acquire_json("badges")
 
-print "Acquiring %s's badges.json... " % account,
-account_badges_json = urllib2.urlopen(
-    "http://www.kongregate.com/accounts/%s/badges.json" % account).read()
-print "OK!"
+account_json = acquire_json("accounts/%s" % account)
+
+account_badges_json = acquire_json("accounts/%s/badges" % account)
 
 badges = BadgeDict(json.loads(badge_json))
+account = json.loads(account_json)
 user_badges = set(i["badge_id"] for i in json.loads(account_badges_json))
-user_join_date = json.loads(account_json)["created_at"]
 
-print_stats(user_badges, badges, user_join_date)
+print_stats(user_badges, badges, account)
