@@ -9,6 +9,13 @@ import json
 import sys
 import urllib2
 
+def acquire_json(name, d={}):
+    if name not in d:
+        print "Acquiring %s..." % name,
+        d[name] = urllib2.urlopen("http://www.kongregate.com/%s.json" % name).read()
+        print "OK!"
+    return d[name]
+
 def print_percentage(label, current, total):
     """
     Pretty-print a percentage in a uniform manner.
@@ -17,14 +24,18 @@ def print_percentage(label, current, total):
     print "- %s: %d of %d (%2.2f%%)" % (label, current, total,
         (current * 100) / total)
 
-def print_stats(user_badges, total_badges, account):
+def stats(account_name):
     """
     Print badge statistics.
-
-    user_badges is an iterable of ints.
-    total_badges is a `BadgeDict`.
-    start_date is an ISO datetime.
     """
+
+    badge_json = acquire_json("badges")
+    account_json = acquire_json("accounts/%s" % account_name)
+    account_badges_json = acquire_json("accounts/%s/badges" % account_name)
+
+    total_badges = BadgeDict(json.loads(badge_json))
+    account = json.loads(account_json)
+    user_badges = set(i["badge_id"] for i in json.loads(account_badges_json))
 
     start_date = account["created_at"]
     then = datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S")
@@ -99,27 +110,15 @@ class BadgeDict(dict):
         return getattr(self, name)
 
 
-if len(sys.argv) < 2:
-    print "Usage: %s <account>" % sys.argv[0]
+if len(sys.argv) < 3:
+    print "Usage: %s <action> <account>" % sys.argv[0]
     sys.exit(1)
 
-account = sys.argv[1]
+action = sys.argv[1]
+account = sys.argv[2]
 
-def acquire_json(name, d={}):
-    if name not in d:
-        print "Acquiring %s..." % name,
-        d[name] = urllib2.urlopen("http://www.kongregate.com/%s.json" % name).read()
-        print "OK!"
-    return d[name]
-
-badge_json = acquire_json("badges")
-
-account_json = acquire_json("accounts/%s" % account)
-
-account_badges_json = acquire_json("accounts/%s/badges" % account)
-
-badges = BadgeDict(json.loads(badge_json))
-account = json.loads(account_json)
-user_badges = set(i["badge_id"] for i in json.loads(account_badges_json))
-
-print_stats(user_badges, badges, account)
+if action == "stats":
+    stats(account)
+else:
+    print "Unknown command %s" % action
+    sys.exit(1)
