@@ -34,11 +34,17 @@ def fair_color(value):
 
     return (r, g, b)
 
-pixels = pickle.load(open("buddha.P", "r"))
+filenames = sys.argv[1:]
 
-WIDTH, HEIGHT = len(pixels), len(pixels[0])
+pixel_arrays = []
 
-print "Loaded %dx%d array of values!" % (WIDTH, HEIGHT)
+for filename in filenames:
+    pixels = pickle.load(open(filename, "r"))
+    WIDTH, HEIGHT = len(pixels), len(pixels[0])
+    print "Loaded %dx%d array of values!" % (WIDTH, HEIGHT)
+    pixel_arrays.append(pixels)
+
+pixels = pixel_arrays[0]
 
 out = Image.new("RGB",(WIDTH, HEIGHT))
 

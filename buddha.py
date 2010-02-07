@@ -3,6 +3,7 @@
 from __future__ import division
 
 import itertools
+import os
 import pickle
 import random
 import sys
@@ -32,8 +33,6 @@ HEIGHT *= 2
 
 COUNT = 20000
 PLOTGOAL = 500000
-
-FILENAME = "buddha.png"
 
 invalid_ranges = (
     (-1.2, -1.1, 0, 0.1),
@@ -116,8 +115,17 @@ except KeyboardInterrupt:
 elapsed = time.time() - t
 print "Elapsed time: %.2fs (plotted %.2f/s)" % (elapsed, plotted/elapsed)
 
-print "Dumping..."
+pickle_name_template = "buddha%04d.P"
+pickle_name = ""
 
-pickle.dump(pixels, open("buddha.P", "w"))
+for i in xrange(1000):
+    if not os.path.exists(pickle_name_template % i):
+        pickle_name = pickle_name_template % i
+        break
 
-print "Done!"
+if pickle_name:
+    print "Dumping..."
+    pickle.dump(pixels, open(pickle_name, "w"))
+    print "Done!"
+else:
+    print "Too many savefiles, couldn't dump."
