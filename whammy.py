@@ -9,6 +9,9 @@ pygtk.require("2.0")
 import gtk
 import gtk.glade
 
+import pypm
+pypm.Initialize()
+
 def program_change(preset, enabled=True):
     if not enabled:
         preset += 17
@@ -45,11 +48,11 @@ def prebend(hsteps, force_double=False):
 
 def bend_up_to_pitch(hsteps, speed, force_double=False):
     if hsteps > 12 or force_double:
-        l = [pitch_control(i)*speed for i in range(two_octaves_up(hsteps))]
-        return two_octaves_up_preamble() + "".join(l)
+        l = [pitch_control(i) for i in range(two_octaves_up(hsteps))]
+        return [two_octaves_up_preamble()] + l
     else:
-        l = [pitch_control(i)*speed for i in range(octave_up(hsteps))]
-        return octave_up_preamble() + "".join(l)
+        l = [pitch_control(i) for i in range(octave_up(hsteps))]
+        return [octave_up_preamble()] + l
 
 def bend_release_from_pitch(hsteps, speed, force_double=False):
     if hsteps > 12 or force_double:
@@ -58,7 +61,7 @@ def bend_release_from_pitch(hsteps, speed, force_double=False):
     else:
         l = [pitch_control(i)*speed for i
             in range(octave_up(hsteps), 0, -1)]
-    return "".join(l)
+    return l
 
 def make_starburst():
     l = []
@@ -70,22 +73,25 @@ def make_starburst():
 
 class Whammy(object):
 
-    def discover(self):
-        proc = subprocess.Popen(["amidi", "-l"], stdout=subprocess.PIPE)
-        info = proc.communicate()[0]
-        for i in info.split():
-            if i.startswith("hw"):
-                self.port = i
-                break
-
     def __init__(self):
-        self.discover()
+        self.out = pypm.Output(2)
 
     def fire(self, payload):
-        subprocess.call(["amidi", "-p", self.port, "-S", payload])
+        assert type(payload) == str
+        bytes = []
+        while payload:
+            bytes.append(int(payload[:2], 16))
+            payload = payload[2:]
+        assert len(bytes) <= 4
+
+        self.out.Write([[bytes, pypm.Time()]])
+
+    def fire_multiple(self, payloads):
+        assert type(payloads) == list
+        [self.fire(i) for i in payloads]
 
     def fire_starburst(self):
-        [self.fire(i) for i in make_starburst()]
+        self.fire_multiple(make_starburst())
 
     def fire_reset(self, value=0):
         self.fire("B00B00")
@@ -101,26 +107,33 @@ class WhammyGUI(object):
     def key_press(self, widget, event, data=None):
         # Bend up
         if event.string == "g":
-            self.whammy.fire(bend_up_to_pitch(1, 24))
+            self.pitchup.set_fraction(1/24)
+            self.whammy.fire_multiple(bend_up_to_pitch(1, 24))
         elif event.string == "h":
-            self.whammy.fire(bend_up_to_pitch(2, 12))
+            self.pitchup.set_fraction(2/24)
+            self.whammy.fire_multiple(bend_up_to_pitch(2, 12))
         elif event.string == "j":
-            self.whammy.fire(bend_up_to_pitch(3, 8))
+            self.pitchup.set_fraction(3/24)
+            self.whammy.fire_multiple(bend_up_to_pitch(3, 8))
         elif event.string == "k":
-            self.whammy.fire(bend_up_to_pitch(4, 6))
+            self.pitchup.set_fraction(4/24)
+            self.whammy.fire_multiple(bend_up_to_pitch(4, 6))
         elif event.string == "l":
-            self.whammy.fire(bend_up_to_pitch(7, 3))
+            self.pitchup.set_fraction(7/24)
+            self.whammy.fire_multiple(bend_up_to_pitch(7, 3))
         elif event.string == ";":
-            self.whammy.fire(bend_up_to_pitch(10, 2))
+            self.pitchup.set_fraction(10/24)
+            self.whammy.fire_multiple(bend_up_to_pitch(10, 2))
         elif event.string == "'":
-            self.whammy.fire(bend_up_to_pitch(12, 2))
+            self.pitchup.set_fraction(12/24)
+            self.whammy.fire_multiple(bend_up_to_pitch(12, 2))
         # Prebend up
         elif event.string == "H":
-            self.whammy.fire(prebend(2))
+            self.whammy.fire_multiple(prebend(2))
         elif event.string == "J":
-            self.whammy.fire(prebend(3))
+            self.whammy.fire_multiple(prebend(3))
         elif event.string == "K":
-            self.whammy.fire(prebend(4))
+            self.whammy.fire_multiple(prebend(4))
         else:
             print "press %s" % event.string
             return False
@@ -129,14 +142,15 @@ class WhammyGUI(object):
     def key_release(self, widget, event, data=None):
         # Snap-release bends
         if event.string in "ghjkl;'":
+            self.pitchup.set_fraction(0)
             self.whammy.fire_reset()
         # Prebend release
         elif event.string == "H":
-            self.whammy.fire(bend_release_from_pitch(2, 120))
+            self.whammy.fire_multiple(bend_release_from_pitch(2, 120))
         elif event.string == "J":
-            self.whammy.fire(bend_release_from_pitch(3, 80))
+            self.whammy.fire_multiple(bend_release_from_pitch(3, 80))
         elif event.string == "K":
-            self.whammy.fire(bend_release_from_pitch(4, 60))
+            self.whammy.fire_multiple(bend_release_from_pitch(4, 60))
         else:
             print "release %s" % event.string
             return False
@@ -145,6 +159,10 @@ class WhammyGUI(object):
     def __init__(self):
         self.glade = gtk.glade.XML("whammy.glade")
         self.window = self.glade.get_widget("window")
+
+        self.pitchup = self.glade.get_widget("pitchup")
+        self.pitchdown = self.glade.get_widget("pitchdown")
+
         self.window.show()
 
         self.window.connect("delete_event", self.delete_event)
