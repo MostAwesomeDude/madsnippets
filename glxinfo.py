@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 gl13_exts = set([
     "ARB_multisample",
     "ARB_multitexture",
