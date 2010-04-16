@@ -1,5 +1,36 @@
 #!/usr/bin/env python
 
+gl11_exts = set([
+    "EXT_blend_logic_op",
+    "EXT_copy_texture",
+    "EXT_polygon_offset",
+    "EXT_subtexture",
+    "EXT_texture",
+    "EXT_texture_object",
+    "EXT_vertex_array",
+])
+
+gl12_exts = set([
+    "EXT_bgra",
+    "EXT_blend_color",
+    "EXT_blend_minmax",
+    "EXT_convolution",
+    "EXT_draw_range_elements",
+    "EXT_histogram",
+    "EXT_packed_pixels",
+    "EXT_rescale_normal",
+    "EXT_separate_specular_color",
+    "EXT_texture3D",
+    "SGI_color_matrix",
+    "SGI_color_table",
+    "SGIS_texture_edge_clamp",
+    "SGIS_texture_lod",
+])
+
+gl121_exts = set([
+    "SGIS_multitexture",
+])
+
 gl13_exts = set([
     "ARB_multisample",
     "ARB_multitexture",
@@ -54,6 +85,14 @@ gl21_exts = set([
     "EXT_texture_sRGB",
 ])
 
+gl30_exts = set([
+    "ARB_vertex_array_object",
+    "EXT_draw_instanced",
+    "EXT_framebuffer_multisample",
+    "EXT_framebuffer_object",
+    "EXT_framebuffer_sRGB",
+])
+
 def parse_exts(ext_string):
     """
     Split a string of multiple extensions into a set of extensions,
@@ -92,11 +131,15 @@ def analyze_glxinfo(glxinfo):
     exts = parse_exts(glxinfo[ext_begin:ext_end])
 
     print "Number of extensions: %d" % len(exts)
+    check_exts(exts, gl11_exts, "GL 1.1")
+    check_exts(exts, gl12_exts, "GL 1.2")
+    check_exts(exts, gl121_exts, "GL 1.2.1")
     check_exts(exts, gl13_exts, "GL 1.3")
     check_exts(exts, gl14_exts, "GL 1.4")
     check_exts(exts, gl15_exts, "GL 1.5")
     check_exts(exts, gl20_exts, "GL 2.0")
     check_exts(exts, gl21_exts, "GL 2.1")
+    check_exts(exts, gl30_exts, "GL 3.0")
 
 if __name__ == "__main__":
     import sys
