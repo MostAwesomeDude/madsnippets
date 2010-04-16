@@ -93,6 +93,55 @@ gl30_exts = set([
     "EXT_framebuffer_sRGB",
 ])
 
+gl31_exts = set([
+    "ARB_copy_buffer",
+    "ARB_draw_instanced",
+    "ARB_texture_buffer_object",
+    "ARB_texture_rectangle",
+    "ARB_uniform_buffer_object",
+    "NV_primitive_restart",
+])
+
+gl32_exts = set([
+    "ARB_depth_clamp",
+    "ARB_draw_elements_base_vertex",
+    "ARB_fragment_coord_conventions",
+    "ARB_geometry_shader4",
+    "ARB_provoking_vertex",
+    "ARB_seamless_cube_map",
+    "ARB_sync",
+    "ARB_texture_multisample",
+    "ARB_vertex_array_bgra",
+])
+
+gl33_exts = set([
+    "ARB_blend_func_extended",
+    "ARB_explicit_attrib_location",
+    "ARB_instanced_arrays",
+    "ARB_occlusion_query2",
+    "ARB_sampler_objects",
+    "ARB_texture_rgb10_a2ui",
+    "ARB_texture_swizzle",
+    "ARB_timer_query",
+    "ARB_vertex_type_2_10_10_10_10_rev",
+])
+
+gl40_exts = set([
+    "ARB_texture_query_lod",
+    "ARB_draw_buffers_blend",
+    "ARB_draw_indirect",
+    "ARB_gpu_shader5",
+    "ARB_gpu_shader_fp64",
+    "ARB_sample_shading",
+    "ARB_shader_subroutine",
+    "ARB_tessellation_shader",
+    "ARB_texture_buffer_object_rgb32",
+    "ARB_texture_cube_map_array",
+    "ARB_texture_gather",
+    "ARB_transform_feedback2",
+    "ARB_transform_feedback3",
+])
+
 def parse_exts(ext_string):
     """
     Split a string of multiple extensions into a set of extensions,
@@ -140,6 +189,10 @@ def analyze_glxinfo(glxinfo):
     check_exts(exts, gl20_exts, "GL 2.0")
     check_exts(exts, gl21_exts, "GL 2.1")
     check_exts(exts, gl30_exts, "GL 3.0")
+    check_exts(exts, gl31_exts, "GL 3.1")
+    check_exts(exts, gl32_exts, "GL 3.2")
+    check_exts(exts, gl33_exts, "GL 3.3")
+    check_exts(exts, gl40_exts, "GL 4.0")
 
 if __name__ == "__main__":
     import sys
