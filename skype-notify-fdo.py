@@ -33,11 +33,16 @@ import optparse
 import subprocess
 import sys
 
-def notify(summary, message, icon):
+def notify(summary, message, icon=None):
     """Send a notification to notification-daemon."""
 
-    l = ["/usr/bin/notify-send", "-i", icon, "-h", "string:append:allowed", summary, message]
-    print l
+    l = ["/usr/bin/notify-send", "-i"]
+    if icon:
+        l.append(icon)
+    else:
+        l.append("skype")
+    l.extend(["-h", "string:append:allowed", summary, message])
+    # print l # For debugging.
     subprocess.call(l)
 
 parser = optparse.OptionParser()
@@ -61,29 +66,29 @@ print vars(options)
 # event: summary, body, icon
 notifications = {
     "SkypeLogin":
-        ("Skype", "You have logged into Skype with {sname}", "skype"),
+        ("Skype", "You have logged into Skype with {sname}", None),
     "SkypeLogout":
         ("You have logged out of Skype", "", "user-offline"),
     "SkypeLoginFailed":
         ("Skype login failed", "", "user-offline"),
     "CallConnecting":
-        ("Dialing {sname}...", "", "skype"),
+        ("Dialing {sname}...", "", None),
     "CallRingingIn":
-        ("{sname}", "is calling you", "skype"),
+        ("{sname}", "is calling you", None),
     "CallRingingOut":
-        ("Calling {sname}...", "", "skype"),
+        ("Calling {sname}...", "", None),
     "CallAnswered":
-        ("Call answered", "", "skype"),
+        ("Call answered", "", None),
     "VoicemailReceived":
-        ("{sname}", "Voicemail received", "skype"),
+        ("{sname}", "Voicemail received", None),
     "VoicemailSent":
-        ("Voicemail sent", "", "skype"),
+        ("Voicemail sent", "", None),
     "ContactOnline":
-        ("{sname}", "is online", "skype"),
+        ("{sname}", "is online", None),
     "ContactOffline":
-        ("{sname}", "is offline", "skype"),
+        ("{sname}", "is offline", None),
     "ContactDeleted":
-        ("Contact Deleted", "{sname} has been removed from your contacts", "skype"),
+        ("Contact Deleted", "{sname} has been removed from your contacts", None),
     "ChatIncomingInitial":
         ("{sname}", "{smessage}", "notification-message-IM"),
     "ChatIncoming":
@@ -93,7 +98,7 @@ notifications = {
     "ChatJoined":
         ("{sname} joined chat", "{smessage}", "emblem-people"),
     "ChatParted":
-        ("{sname} left chat", "{smessage}", "skype"),
+        ("{sname} left chat", "{smessage}", None),
     "TransferComplete":
         ("Transfer Complete", "{fpath}/{fname}", "gtk-save"),
     "TransferComplete":
