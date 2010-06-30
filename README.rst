@@ -36,6 +36,12 @@ speed hacks are included, but these are largely unoptimized and for show.
  * gcd
  * lcm
 
+skype-notify-fdo
+----------------
+
+Simple script to send Skype events to the notification-daemon. Not originally
+my code; the idea and initial implementation was done by Lightbreeze.
+
 whammy
 ------
 
