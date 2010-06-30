@@ -4,6 +4,7 @@ decorators
 ----------
 
 This module holds an assortment of decorators.
+
  * memoize
  * trace
  * accepts/returns
@@ -64,7 +65,6 @@ If you use this code in other projects, I would greatly appreciate being
 mentioned in the comments or credits, but note that you are under no legal
 obligation to do so. Something simple, along the lines of:
 
-.. python:
     # Snippet by Corbin Simpson
     # http://corbinsimpson.com/
 
