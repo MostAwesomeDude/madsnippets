@@ -35,14 +35,13 @@ import sys
 
 def notify(summary, message, icon):
     """Send a notification to notification-daemon."""
-    if summary == None: summary = " "
 
     l = ["/usr/bin/notify-send", "-i", icon, "-h", "string:append:allowed", summary, message]
     print l
     subprocess.call(l)
 
 parser = optparse.OptionParser()
-parser.add_option("-e", "--event", dest="type", help="type of SKYPE_EVENT")
+parser.add_option("-e", "--event", dest="event", help="type of SKYPE_EVENT")
 parser.add_option("-n", "--sname", dest="sname",
     help="display name of contact")
 parser.add_option("-u", "--skype", dest="sskype",
@@ -56,36 +55,54 @@ parser.add_option("-f", "--filename", dest="fname", help="file name",
 
 options = parser.parse_args()[0]
 
-print options.type
-        
-# If event type x show notification (summary, body, icon)
-# Summary should not be None
-if options.type == 'SkypeLogin': notify("Skype","You have logged into Skype with {contact}".format(contact=options.sname),"skype")
-#        elif options.type == 'SkypeLogout': notify("You have logged out of Skype",None,"user-offline")
-elif options.type == 'SkypeLoginFailed': notify("Skype login failed",None,"user-offline")
-#        elif options.type == 'CallConnecting': notify("Dailing... {contact}".format(contact=options.sname),None,"skype") #some of these should be merged and update to the same bubble: Call Connecting -> CallRingingOut -> Call Answered
-elif options.type == 'CallRingingIn': notify(options.sname,"is calling you","skype")
-#elif options.type == 'CallRingingOut': notify("Calling {contact}".format(contact=options.sname),"skype") #merge ^^ see above
-#elif options.type == 'CallAnswered': notify("Call Answered",None,"skype")
-elif options.type == 'VoicemailReceived': notify(options.sname,"Voicemail Received","skype")
-elif options.type == 'VoicemailSent': notify("Voicemail Sent",None,"skype")
-elif options.type == 'ContactOnline':
-    notify(options.sname,"is online","skype")
-    #self.addIndicator(options.type, options.sname, options.smessage)
-elif options.type == 'ContactOffline': notify(options.sname,"is offline","skype")
-elif options.type == 'ContactDeleted': notify("Contact Deleted", "{contact} has been deleted from your contact list".format(contact=options.sname),"skype")
-elif options.type == 'ChatIncomingInitial':
-    #notify(options.sname,options.smessage,"notification-message-IM")
-    self.addIndicator(options.type, options.sname, options.smessage)
-elif options.type == 'ChatIncoming':
-    #notify(options.sname,options.smessage,"notification-message-IM")
-    self.addIndicator(options.type, options.sname, options.smessage)
-#elif options.type == 'ChatOutgoing': notify(options.sname,options.smessage,"notification-message-IM")
-elif options.type == 'ChatJoined': notify("{contact} joined chat".format(contact=options.sname),options.smessage,"emblem-people")
-elif options.type == 'ChatParted': notify("{contact} left chat".format(contact=options.sname),options.smessage,None)
-elif options.type == 'TransferComplete': 
-    notify("Transfer Complete","{path}/{filename}".format(filename=options.fname,path=options.fpath),"gtk-save")
-    #TODO show dialog [ok] [open file] [reveal in folder]
-    # or preview in gloobus :D if suitable format
-elif options.type == 'TransferFailed': notify("Transfer Failed","{filename}".format(filename=options.fname),"error")
-elif options.type == 'Birthday': notify(options.sname,"has a birthday Tomorrow","appointment-soon")
+print vars(options)
+
+# Arguments for dispatch dict.
+# event: summary, body, icon
+notifications = {
+    "SkypeLogin":
+        ("Skype", "You have logged into Skype with {sname}", "skype"),
+    "SkypeLogout":
+        ("You have logged out of Skype", "", "user-offline"),
+    "SkypeLoginFailed":
+        ("Skype login failed", "", "user-offline"),
+    "CallConnecting":
+        ("Dialing {sname}...", "", "skype"),
+    "CallRingingIn":
+        ("{sname}", "is calling you", "skype"),
+    "CallRingingOut":
+        ("Calling {sname}...", "", "skype"),
+    "CallAnswered":
+        ("Call answered", "", "skype"),
+    "VoicemailReceived":
+        ("{sname}", "Voicemail received", "skype"),
+    "VoicemailSent":
+        ("Voicemail sent", "", "skype"),
+    "ContactOnline":
+        ("{sname}", "is online", "skype"),
+    "ContactOffline":
+        ("{sname}", "is offline", "skype"),
+    "ContactDeleted":
+        ("Contact Deleted", "{sname} has been removed from your contacts", "skype"),
+    "ChatIncomingInitial":
+        ("{sname}", "{smessage}", "notification-message-IM"),
+    "ChatIncoming":
+        ("{sname}", "{smessage}", "notification-message-IM"),
+    "ChatOutgoing":
+        ("{sname}", "{smessage}", "notification-message-IM"),
+    "ChatJoined":
+        ("{sname} joined chat", "{smessage}", "emblem-people"),
+    "ChatParted":
+        ("{sname} left chat", "{smessage}", "skype"),
+    "TransferComplete":
+        ("Transfer Complete", "{fpath}/{fname}", "gtk-save"),
+    "TransferComplete":
+        ("Transfer Failed", "{fname}", "error"),
+    "Birthday":
+        ("{sname}", "has a birthday tomorrow", "appointment-soon"),
+}
+
+if options.event in notifications:
+    summary, body, icon = notifications[options.event]
+    # I apologize for this next line. ~ C.
+    notify(summary.format(**vars(options)), body.format(**vars(options)), icon)
