@@ -12,8 +12,6 @@ gl11_exts = set([
 
 gl12_exts = set([
     "EXT_bgra",
-    "EXT_blend_color",
-    "EXT_blend_minmax",
     "EXT_convolution",
     "EXT_draw_range_elements",
     "EXT_histogram",
@@ -25,10 +23,6 @@ gl12_exts = set([
     "SGI_color_table",
     "SGIS_texture_edge_clamp",
     "SGIS_texture_lod",
-])
-
-gl121_exts = set([
-    "SGIS_multitexture",
 ])
 
 gl13_exts = set([
@@ -59,6 +53,7 @@ gl14_exts = set([
     "EXT_secondary_color",
     "EXT_stencil_wrap",
     "EXT_texture_lod_bias",
+    "NV_blend_square",
     "SGIS_generate_mipmap",
 ])
 
@@ -182,7 +177,6 @@ def analyze_glxinfo(glxinfo):
     print "Number of extensions: %d" % len(exts)
     check_exts(exts, gl11_exts, "GL 1.1")
     check_exts(exts, gl12_exts, "GL 1.2")
-    check_exts(exts, gl121_exts, "GL 1.2.1")
     check_exts(exts, gl13_exts, "GL 1.3")
     check_exts(exts, gl14_exts, "GL 1.4")
     check_exts(exts, gl15_exts, "GL 1.5")
