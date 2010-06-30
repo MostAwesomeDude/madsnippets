@@ -3,6 +3,9 @@
 
 # Copyright (c) 2009, Lightbreeze
 
+# 2010 Corbin Simpson <MostAwesomeDude@gmail.com>
+# Modification for notification-daemon compatibility
+
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 #
+
 # to use this script: Open Skype -> Open the menu and press 'Options' or press Ctrl-O
 # -> hit the 'Advanced' button and check 'Execute the following script on _any_ event'
 # -> paste: python /path/to/skype-notify.py -e"%type" -n"%sname" -f"%fname" -p"%fpath" -m"%smessage" -s%fsize -u%sskype

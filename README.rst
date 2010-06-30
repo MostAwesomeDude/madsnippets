@@ -69,3 +69,6 @@ obligation to do so. Something simple, along the lines of:
     # http://corbinsimpson.com/
 
 Or anything similar, would be greatly appreciated.
+
+skype-notify-fdo is distributed under the terms of the GNU GPL version 3, as
+documented in its source code.
