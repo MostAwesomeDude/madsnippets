@@ -2,23 +2,7 @@
 
 # compiz-wallpaper.py
 # A very simple script to control wallpapers in compiz.
-# (c) Corbin Simpson, 2008
-# Redistributable under the terms of the GNU Public License
-#
-# v0.3.1 - Screen option; lets one specify which output/screen to modify.
-#        - Fix possible bug with version detection on older Python.
-#
-# v0.3   - Switch to four-space tabs.
-#        = Options! Now you can specify:
-#          - Per-desktop mode
-#          - Random mode
-#          - Verbose mode
-#          - Show current wallpapers
-#
-# v0.2   - Limit files included to just images that are loadable by Compiz.
-#        - Clean up some code to make it more Pythonic.
-#
-# v0.1   - Initial release.
+# (c) Corbin Simpson, 2008-2010
 
 """
 Compiz Wallpaper Script
