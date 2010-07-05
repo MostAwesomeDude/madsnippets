@@ -82,7 +82,7 @@ if "wallpaper" not in context.Plugins:
 plugin = context.Plugins['wallpaper']
 
 if options.screen >= len(context.Plugins['core'].Screens):
-    error("No such screen %d" + % options.screen)
+    error("No such screen %d" % options.screen)
 
 core_settings = context.Plugins['core'].Screens[options.screen]
 
