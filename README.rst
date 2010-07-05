@@ -1,5 +1,10 @@
 This is a collection of simple snippets I've accumulated during the years.
 
+compiz-wallpaper
+----------------
+
+A simple script for assigning wallpapers to Compiz.
+
 decorators
 ----------
 
