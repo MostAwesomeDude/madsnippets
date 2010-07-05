@@ -60,6 +60,8 @@ import os.path
 import random
 import sys
 
+import compizconfig
+
 is_2_5 = (sys.version_info[1] >= 5)
 
 suffixes = (".png", ".jpg", ".jpeg", ".svg", ".PNG", ".JPG", ".JPEG", ".SVG")
@@ -88,17 +90,15 @@ def info(message):
 if (not options.random) and (not options.show) and (options.desktop == None):
     parser.error("Please specify an action. (-d, -r, -s)")
 
-import compizconfig
-
 context = compizconfig.Context(plugins=['core','wallpaper'], basic_metadata=True)
 
-if "wallpaper" in context.Plugins:
-    plugin = context.Plugins['wallpaper']
-else:
+if "wallpaper" not in context.Plugins:
     error("Couldn't find wallpaper plugin!")
 
+plugin = context.Plugins['wallpaper']
+
 if options.screen >= len(context.Plugins['core'].Screens):
-    error("No such screen "+str(options.screen))
+    error("No such screen %d" + % options.screen)
 
 core_settings = context.Plugins['core'].Screens[options.screen]
 
@@ -107,9 +107,8 @@ screen = plugin.Screens[options.screen]
 viewports = core_settings['hsize'].Value * core_settings['vsize'].Value
 
 if options.show:
-
-    for i in range(len(screen['bg_image'].Value)):
-        print "Paper on desktop", i+1, ":", screen['bg_image'].Value[i]
+    for pair in enumerate(screen['bg_image'].Value):
+        print "Paper on desktop %d: %s" % pair
 
 elif options.desktop != None:
     if len(args) < 1:
@@ -139,10 +138,11 @@ elif options.random:
         working_dir = os.path.abspath(args[0])
     else:
         working_dir = os.getcwd()
-    if os.path.isdir(working_dir):
-        info("Using "+working_dir+" as the image source directory...")
-    else:
+
+    if not os.path.isdir(working_dir):
         error("You mistyped the directory you wanted...")
+
+    info("Using %s as the image source directory..." % working_dir)
 
     direct = [os.path.join(working_dir, i) for i in os.listdir(working_dir)]
     direct.sort()
@@ -151,6 +151,7 @@ elif options.random:
     if is_2_5:
         for paper in direct:
             if not paper.endswith(suffixes):
+                info("Discarding bad wallpaper %s" % paper)
                 direct.remove(paper)
 
     if len(direct) < viewports:
@@ -164,6 +165,6 @@ elif options.random:
     screen['bg_image'].Value = papers
 
     for paper in papers:
-        info("Using image: "+paper)
+        info("Using image: %s" % paper)
 
     context.Write()
