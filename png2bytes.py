@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 
+import serial
+import sys
+
 import Image
 
-image = Image.open("osl.png")
+image = Image.open(sys.argv[1])
+
+s = serial.Serial(sys.argv[2])
 
 l = []
 
@@ -32,9 +37,6 @@ for i in range(len(l) / 8):
         high += 1
 
 commands.append("U")
-
-import serial
-s = serial.Serial("/dev/ttyUSB0")
 
 for command in commands:
     s.write(command)
