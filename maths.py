@@ -1,5 +1,28 @@
 import math
 
+class Continued(object):
+
+    @classmethod
+    def from_int(cls, i):
+        instance = cls()
+        instance.digits = [i]
+        return instance
+
+    @classmethod
+    def from_rational(cls, numerator, denominator):
+        instance = cls()
+        if not denominator:
+            instance.digits = [0]
+            return instance
+
+        instance.digits = []
+        while numerator != 1:
+            digit, numerator = divmod(numerator, denominator)
+            instance.digits.append(digit)
+            numerator, denominator = denominator, numerator
+        instance.digits.append(denominator)
+        return instance
+
 def gcd(a, b):
     """
     Return the greatest common divisor of a and b.
