@@ -2,6 +2,19 @@ import math
 
 class Continued(object):
 
+    def normalize(self):
+        try:
+            while True:
+                index = self.digits.index(0, 1)
+                if index == len(self.digits) + 1:
+                    self.digits = self.digits[:-1]
+                else:
+                    digit = sum(self.digits[index - 1:index + 2])
+                    self.digits = (self.digits[:index - 1] + [digit] +
+                        self.digits[index + 2:])
+        except ValueError:
+            pass
+
     @classmethod
     def from_int(cls, i):
         instance = cls()
@@ -11,16 +24,13 @@ class Continued(object):
     @classmethod
     def from_rational(cls, numerator, denominator):
         instance = cls()
-        if not denominator:
-            instance.digits = [0]
-            return instance
-
         instance.digits = []
         while numerator != 1:
             digit, numerator = divmod(numerator, denominator)
             instance.digits.append(digit)
             numerator, denominator = denominator, numerator
         instance.digits.append(denominator)
+        instance.normalize()
         return instance
 
 def gcd(a, b):
