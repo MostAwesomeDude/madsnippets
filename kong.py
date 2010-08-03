@@ -12,7 +12,9 @@ import urllib2
 def acquire_json(name, d={}):
     if name not in d:
         print "Acquiring %s..." % name,
-        d[name] = urllib2.urlopen("http://www.kongregate.com/%s.json" % name).read()
+        handle = urllib2.urlopen("http://www.kongregate.com/%s.json" % name)
+        data = handle.read()
+        d[name] = json.loads(data)
         print "OK!"
     return d[name]
 
@@ -33,11 +35,10 @@ def stats(account_name):
     account_json = acquire_json("accounts/%s" % account_name)
     account_badges_json = acquire_json("accounts/%s/badges" % account_name)
 
-    total_badges = BadgeDict(json.loads(badge_json))
-    account = json.loads(account_json)
-    user_badges = set(i["badge_id"] for i in json.loads(account_badges_json))
+    total_badges = BadgeDict(badge_json)
+    user_badges = set(i["badge_id"] for i in account_badges_json)
 
-    start_date = account["created_at"]
+    start_date = account_json["created_at"]
     then = datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S")
     today = datetime.date.today()
     day_delta = today - then.date()
@@ -64,7 +65,7 @@ def stats(account_name):
         if badge["id"] in user_badges)
 
     print_percentage("Points from Badges", total_points_from_badges,
-        account["points"])
+        account_json["points"])
 
     print "- Average Points per Badge: %.2f" % \
         (total_points_from_badges / user_count)
