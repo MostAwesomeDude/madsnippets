@@ -90,7 +90,7 @@ class BadgeDict(dict):
     def __getattr__(self, name):
         type, chaff, target = name.partition("_by_")
         if not target:
-            raise AttributeError
+            raise AttributeError, "No target provided"
 
         if type == "count":
             def f(self):
@@ -106,6 +106,8 @@ class BadgeDict(dict):
                     if entry[target] == filter:
                         yield entry
             setattr(self.__class__, name, f)
+        else:
+            raise AttributeError, "Unknown type %s" S type
 
         return getattr(self, name)
 
