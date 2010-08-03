@@ -34,8 +34,21 @@ class Continued(object):
         instance.normalize()
         return instance
 
+    def __add__(self, other):
+        return self.combine(other, (0, 1, 1, 0, 1, 0, 0, 0))
+
+    def __sub__(self, other):
+        return self.combine(other, (0, 1, -1, 0, 1, 0, 0, 0))
+
     def __mul__(self, other):
-        a, b, c, d, e, f, g, h = 0, 0, 0, 1, 1, 0, 0, 0
+        return self.combine(other, (0, 0, 0, 1, 1, 0, 0, 0))
+
+    def __div__(self, other):
+        return self.combine(other, (0, 1, 0, 0, 0, 0, 1, 0))
+
+    def combine(self, other, initial):
+        a, b, c, d, e, f, g, h = initial
+
         iterx = itertools.chain(self.digits, itertools.repeat(None))
         itery = itertools.chain(other.digits, itertools.repeat(None))
         result = Continued()
