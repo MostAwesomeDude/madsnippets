@@ -1,3 +1,4 @@
+import itertools
 import math
 
 class Continued(object):
@@ -32,6 +33,56 @@ class Continued(object):
         instance.digits.append(denominator)
         instance.normalize()
         return instance
+
+    def __mul__(self, other):
+        a, b, c, d, e, f, g, h = 0, 0, 0, 1, 1, 0, 0, 0
+        iterx = itertools.chain(self.digits, itertools.repeat(None))
+        itery = itertools.chain(other.digits, itertools.repeat(None))
+        result = Continued()
+        result.digits = []
+        channel = True
+        while any((e, f, g, h)):
+            old = a, b, c, d, e, f, g, h
+            print old
+            ae = a // e if e else None
+            bf = b // f if f else None
+            cg = c // g if g else None
+            dh = d // h if h else None
+            if ae == bf and bf == cg and cg == dh:
+                r = ae
+                print r
+                # Output a term.
+                a, b, c, d, e, f, g, h = (e, f, g, h,
+                    a - e * r, b - f * r, c - g * r, d - h * r)
+                result.digits.append(r)
+            else:
+                # Which input to choose?
+                # if None not in (ae, bf, cg) and abs(bf - ae) > abs(cg - ae):
+                if channel:
+                    # Input from x.
+                    p = next(iterx)
+                    if p is None:
+                        # Infinity: Replicate channels.
+                        a, c, e, g = b, d, f, h
+                    else:
+                        # Ingestion.
+                        a, b, c, d, e, f, g, h = (
+                            b, a + b * p, d, c + d * p,
+                            f, e + f * p, h, g + h * p)
+                else:
+                    # Input from y.
+                    q = next(itery)
+                    if q is None:
+                        # Infinity: Replicate channels.
+                        a, b, e, f = c, d, g, h
+                    else:
+                        # Ingestion.
+                        a, b, c, d, e, f, g, h = (
+                            c, d, a + c * q, b + d * q,
+                            g, h, e + g * q, f + h * q)
+            if old == (a, b, c, d, e, f, g, h):
+                channel = not channel
+        return result
 
 def gcd(a, b):
     """
