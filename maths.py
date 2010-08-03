@@ -3,19 +3,6 @@ import math
 
 class Continued(object):
 
-    def normalize(self):
-        try:
-            while True:
-                index = self.digits.index(0, 1)
-                if index == len(self.digits) + 1:
-                    self.digits = self.digits[:-1]
-                else:
-                    digit = sum(self.digits[index - 1:index + 2])
-                    self.digits = (self.digits[:index - 1] + [digit] +
-                        self.digits[index + 2:])
-        except ValueError:
-            pass
-
     @classmethod
     def from_int(cls, i):
         instance = cls()
@@ -33,6 +20,12 @@ class Continued(object):
         instance.digits.append(denominator)
         instance.normalize()
         return instance
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return "Continued(%s)" % self.digits
 
     def __add__(self, other):
         return self.combine(other, (0, 1, 1, 0, 1, 0, 0, 0))
@@ -96,6 +89,19 @@ class Continued(object):
             if old == (a, b, c, d, e, f, g, h):
                 channel = not channel
         return result
+
+    def normalize(self):
+        try:
+            while True:
+                index = self.digits.index(0, 1)
+                if index == len(self.digits) + 1:
+                    self.digits = self.digits[:-1]
+                else:
+                    digit = sum(self.digits[index - 1:index + 2])
+                    self.digits = (self.digits[:index - 1] + [digit] +
+                        self.digits[index + 2:])
+        except ValueError:
+            pass
 
 def gcd(a, b):
     """
