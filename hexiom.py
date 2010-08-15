@@ -52,17 +52,20 @@ def hexagonal(n):
     return (n * 3) * (n - 1) + 1
 
 class Slot(object):
+
     def __init__(self):
         self.enabled = True
         self.conns = 0
         self.filled = False
         self.locked = False
+
     def __repr__(self):
         return "<Slot(%senabled, %sfilled(%d), %slocked)>" % (
             "" if self.enabled else "not ",
             "" if self.filled else "not ",
             self.conns,
             "" if self.locked else "not ")
+
     def __str__(self):
         if not self.enabled:
             return "X"
@@ -75,9 +78,11 @@ class Slot(object):
             return "-"
 
 class Hexiom(object):
+
     def __init__(self, level):
         self.level = decrypt(level)
         self.parse()
+
     def parse(self):
         # First, split off the level into its groups
         self.size, disabled_count, filled_count, locked_count = \
@@ -112,24 +117,29 @@ class Hexiom(object):
             self.demangle_ring5()
         if self.size > 5:
             self.demangle_ring6()
+
     def demangle_ring3(self):
         # index 2 should be at the end of the ring
         self.rings[2].append(self.rings[2].pop(2))
+
     def demangle_ring4(self):
         # indices 4 and 2, in that order, go to end
         self.rings[3].append(self.rings[3].pop(4))
         self.rings[3].append(self.rings[3].pop(2))
+
     def demangle_ring5(self):
         # indices 6, 4, 2; a pattern emerges!
         self.rings[4].append(self.rings[4].pop(6))
         self.rings[4].append(self.rings[4].pop(4))
         self.rings[4].append(self.rings[4].pop(2))
+
     def demangle_ring6(self):
         # indices 8, 6, 4, 2
         self.rings[5].append(self.rings[5].pop(8))
         self.rings[5].append(self.rings[5].pop(6))
         self.rings[5].append(self.rings[5].pop(4))
         self.rings[5].append(self.rings[5].pop(2))
+
     def dump(self):
         for i in xrange(self.size):
             print "Unrolled ring %d:" % (i + 1,)
