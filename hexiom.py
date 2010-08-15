@@ -51,6 +51,12 @@ def encrypt(l):
 def hexagonal(n):
     return (n * 3) * (n - 1) + 1
 
+def pairwise(i):
+    # From itertools docs
+    a, b = itertools.tee(i)
+    next(b, None)
+    return itertools.izip(a, b)
+
 class Slot(object):
 
     def __init__(self):
@@ -88,27 +94,29 @@ class Hexiom(object):
         self.size, disabled_count, filled_count, locked_count = \
             self.level[:4]
         filled_count *= 3
+
         # Allocate slots
-        self.slots = [Slot() for i in xrange(hexagonal(self.size))]
+        self.slots = [Slot() for i in range(hexagonal(self.size))]
+
         disabled = self.level[4:4+disabled_count]
         for s in disabled:
             self.slots[s].enabled = False
+
         filled = self.level[4+disabled_count:4+disabled_count+filled_count]
         i = iter(filled)
         for conns, start_slot, finish_slot in itertools.izip(i, i, i):
             self.slots[finish_slot].filled = True
             self.slots[finish_slot].conns = conns
+
         locked = self.level[4+disabled_count+filled_count:]
         for s in locked:
             self.slots[s].locked = True
+
         # Allocate rings
-        self.rings = []
-        self.rings.append(self.slots[0:1])
-        self.rings.append(self.slots[1:7])
-        self.rings.append(self.slots[7:19])
-        self.rings.append(self.slots[19:37])
-        self.rings.append(self.slots[37:61])
-        self.rings.append(self.slots[61:91])
+        self.rings = [self.slots[i:j]
+            for i, j in pairwise(hexagonal(x) for x in range(self.size + 1))
+        ]
+
         self.demangle_rings()
 
     def demangle_rings(self):
@@ -126,7 +134,7 @@ class Hexiom(object):
                 ring.append(ring.pop(index))
 
     def dump(self):
-        for i in xrange(self.size):
+        for i in range(self.size):
             print "Unrolled ring %d:" % (i + 1,)
             fmt = "[%s]" % " ".join("%s" for i in self.rings[i])
             print fmt % tuple(self.rings[i])
