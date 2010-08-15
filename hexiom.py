@@ -134,7 +134,7 @@ class Hexiom(object):
                 ring.append(ring.pop(index))
 
     def dump(self):
-        for i in range(self.size):
+        for i, ring in enumerate(self.rings):
             print "Unrolled ring %d:" % (i + 1,)
-            fmt = "[%s]" % " ".join("%s" for i in self.rings[i])
-            print fmt % tuple(self.rings[i])
+            fmt = "[%s]" % " ".join("%s" * len(ring))
+            print fmt % tuple(ring)
