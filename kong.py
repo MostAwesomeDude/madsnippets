@@ -108,7 +108,7 @@ class BadgeDict(dict):
                         yield entry
             setattr(self.__class__, name, f)
         else:
-            raise AttributeError, "Unknown type %s" S type
+            raise AttributeError, "Unknown type %s" % type
 
         return getattr(self, name)
 
