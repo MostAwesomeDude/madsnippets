@@ -112,7 +112,15 @@ class Hexiom(object):
         self.demangle_rings()
 
     def demangle_rings(self):
-        # Hexiom stores the 3rd and higher rings strangely.
+        """
+        Convert the rings to a fully linear format.
+        
+        Hexiom stores the higher rings strangely. Starting with ring 3, the
+        3rd slot should actually be at the beginning of the ring, and in each
+        higher ring, another slot becomes misplaced. This method simply
+        cherry-picks each misplaced element out of the list and puts it at the
+        beginning, where it belongs.
+        """
         for i, ring in enumerate(self.rings[2:]):
             for index in range(i * 2 + 2, 0, -2):
                 ring.append(ring.pop(index))
