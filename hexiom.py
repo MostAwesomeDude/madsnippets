@@ -109,36 +109,13 @@ class Hexiom(object):
         self.rings.append(self.slots[19:37])
         self.rings.append(self.slots[37:61])
         self.rings.append(self.slots[61:91])
-        if self.size > 2:
-            self.demangle_ring3()
-        if self.size > 3:
-            self.demangle_ring4()
-        if self.size > 4:
-            self.demangle_ring5()
-        if self.size > 5:
-            self.demangle_ring6()
+        self.demangle_rings()
 
-    def demangle_ring3(self):
-        # index 2 should be at the end of the ring
-        self.rings[2].append(self.rings[2].pop(2))
-
-    def demangle_ring4(self):
-        # indices 4 and 2, in that order, go to end
-        self.rings[3].append(self.rings[3].pop(4))
-        self.rings[3].append(self.rings[3].pop(2))
-
-    def demangle_ring5(self):
-        # indices 6, 4, 2; a pattern emerges!
-        self.rings[4].append(self.rings[4].pop(6))
-        self.rings[4].append(self.rings[4].pop(4))
-        self.rings[4].append(self.rings[4].pop(2))
-
-    def demangle_ring6(self):
-        # indices 8, 6, 4, 2
-        self.rings[5].append(self.rings[5].pop(8))
-        self.rings[5].append(self.rings[5].pop(6))
-        self.rings[5].append(self.rings[5].pop(4))
-        self.rings[5].append(self.rings[5].pop(2))
+    def demangle_rings(self):
+        # Hexiom stores the 3rd and higher rings strangely.
+        for i, ring in enumerate(self.rings[2:]):
+            for index in range(i * 2 + 2, 0, -2):
+                ring.append(ring.pop(index))
 
     def dump(self):
         for i in xrange(self.size):
