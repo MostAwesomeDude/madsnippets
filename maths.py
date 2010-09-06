@@ -1,3 +1,4 @@
+import functools
 import itertools
 import math
 
@@ -52,7 +53,30 @@ class Continued(object):
                     yield i
                     i += 2
                     mod = 0
-        instance.digits = generator()
+        instance.digits = generator
+        return instance
+
+    @classmethod
+    def sqrt(cls, i):
+        instance = cls()
+        instance.finite = False
+        def generator(i):
+            l = []
+            m = 0
+            d = 1
+            a = int(math.sqrt(i))
+            while (m, d, a) not in l:
+                l.append((m, d, a))
+                yield a
+                m = d * a - m
+                d = (i - m**2) / d
+                a = int((math.sqrt(i) + m) / d)
+            # Extract just the a component (index 2)
+            repeating = zip(*l[l.index((m, d, a)):])[2]
+            iterator = itertools.cycle(repeating)
+            while True:
+                yield next(iterator)
+        instance.digits = functools.partial(generator, i)
         return instance
 
     def __repr__(self):
@@ -82,8 +106,15 @@ class Continued(object):
 
         a, b, c, d, e, f, g, h = initial
 
-        iterx = itertools.chain(self.digits, itertools.repeat(None))
-        itery = itertools.chain(other.digits, itertools.repeat(None))
+        if self.finite:
+            iterx = itertools.chain(self.digits, itertools.repeat(None))
+        else:
+            iterx = self.digits()
+        if other.finite:
+            itery = itertools.chain(other.digits, itertools.repeat(None))
+        else:
+            itery = other.digits()
+
         result = Continued()
         result.digits = []
         channel = True
