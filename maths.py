@@ -2,6 +2,21 @@ import itertools
 import math
 
 class Continued(object):
+    """
+    An implementation of continued fractions.
+
+    Continued fractions are a complex and elegant method for representing
+    certain numbers. In particular, finite continued fractions are terrific
+    for representing rationals, and infinite continued fractions can perfectly
+    represent quadratic surds and certain transcendental identities.
+    """
+
+    finite = True
+    """
+    Whether this instance is finite or infinite.
+
+    This is to avoid isinstance() calls on `digits`.
+    """
 
     @classmethod
     def from_int(cls, i):
@@ -19,6 +34,25 @@ class Continued(object):
             numerator, denominator = denominator, numerator
         instance.digits.append(denominator)
         instance.normalize()
+        return instance
+
+    @classmethod
+    def e(cls):
+        instance = cls()
+        instance.finite = False
+        def generator():
+            yield 2
+            i = 2
+            mod = 1
+            while True:
+                mod += 1
+                if mod % 3:
+                    yield 1
+                else:
+                    yield i
+                    i += 2
+                    mod = 0
+        instance.digits = generator()
         return instance
 
     def __repr__(self):
