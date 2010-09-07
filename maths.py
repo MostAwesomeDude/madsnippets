@@ -28,12 +28,28 @@ class Continued(object):
     @classmethod
     def from_rational(cls, numerator, denominator):
         instance = cls()
-        while denominator:
-            print numerator, denominator
-            digit, numerator = divmod(numerator, denominator)
-            instance.digitlist.append(digit)
+        factor = gcd(numerator, denominator)
+        numerator //= factor
+        denominator //= factor
+        if denominator > numerator:
+            instance.digitlist.append(0)
             numerator, denominator = denominator, numerator
-        instance.digitlist.append(numerator)
+        # Do the divmod() dance to generate GCD slices.
+        while True:
+            digit, numerator = divmod(numerator, denominator)
+            print digit, numerator, denominator
+            if not digit:
+                break
+            instance.digitlist.append(digit)
+            if not numerator:
+                break
+            numerator, denominator = denominator, numerator
+        # In the line above, we switched names, but this is still the previous
+        # denominator.
+        # Only record it if not 1; if it's 1, add it to the last item instead.
+        if instance.digitlist[-1] == 1:
+            instance.digitlist = instance.digitlist[:-1]
+            instance.digitlist[-1] += 1
         instance.normalize()
         return instance
 
@@ -185,9 +201,6 @@ class Continued(object):
             raise ValueError, "Can't normalize infinite continued fractions!"
         try:
             while True:
-                if self.digitlist[-1] == 1:
-                    self.digitlist = self.digitlist[:-1]
-                    self.digitlist[-1] += 1
                 index = self.digitlist.index(0, 1)
                 if index == len(self.digitlist) + 1:
                     self.digitlist = self.digitlist[:-1]
