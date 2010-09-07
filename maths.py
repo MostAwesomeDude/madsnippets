@@ -37,7 +37,7 @@ class Continued(object):
         # Do the divmod() dance to generate GCD slices.
         while True:
             digit, numerator = divmod(numerator, denominator)
-            print digit, numerator, denominator
+            # print digit, numerator, denominator
             if not digit:
                 break
             instance.digitlist.append(digit)
@@ -175,12 +175,20 @@ class Continued(object):
                 a, b, c, d, e, f, g, h = (e, f, g, h,
                     a - e * r, b - f * r, c - g * r, d - h * r)
                 yield r
-            elif x_is_empty and y_is_empty:
+            elif self.finite and x_is_empty and y_is_empty:
                 raise StopIteration
             else:
                 # Which input to choose?
+                if x_is_empty:
+                    use_x = False
+                elif y_is_empty:
+                    use_x = True
+                # If we've had the same state in the state machine since
+                # last time, why not try the other input?
+                elif old == (a, b, c, d, e, f, g, h):
+                    use_x = not use_x
                 # if None not in (ae, bf, cg) and abs(bf - ae) > abs(cg - ae):
-                if use_x and not x_is_empty:
+                if use_x:
                     # Input from x.
                     p = next(iterx)
                     if p is None:
@@ -192,7 +200,7 @@ class Continued(object):
                         a, b, c, d, e, f, g, h = (
                             b, a + b * p, d, c + d * p,
                             f, e + f * p, h, g + h * p)
-                elif not y_is_empty:
+                else:
                     # Input from y.
                     q = next(itery)
                     if q is None:
@@ -204,8 +212,6 @@ class Continued(object):
                         a, b, c, d, e, f, g, h = (
                             c, d, a + c * q, b + d * q,
                             g, h, e + g * q, f + h * q)
-            if old == (a, b, c, d, e, f, g, h):
-                use_x = not use_x
 
     def normalize(self):
         if not self.finite:
