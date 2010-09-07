@@ -113,7 +113,7 @@ class Continued(object):
         """
 
         if self.finite:
-            return self.digitlsit
+            return self.digitlist
         else:
             self.make_digits, retval = itertools.tee(self.make_digits)
             return retval
@@ -180,15 +180,17 @@ class Continued(object):
         return result
 
     def normalize(self):
+        if not self.finite:
+            raise ValueError, "Can't normalize infinite continued fractions!"
         try:
             while True:
-                index = self.digits.index(0, 1)
-                if index == len(self.digits) + 1:
-                    self.digits = self.digits[:-1]
+                index = self.digitlist.index(0, 1)
+                if index == len(self.digitlist) + 1:
+                    self.digitlist = self.digitlist[:-1]
                 else:
-                    digit = sum(self.digits[index - 1:index + 2])
-                    self.digits = (self.digits[:index - 1] + [digit] +
-                        self.digits[index + 2:])
+                    digit = sum(self.digitlist[index - 1:index + 2])
+                    self.digitlist = (self.digitlist[:index - 1] + [digit] +
+                        self.digitlist[index + 2:])
         except ValueError:
             pass
 
