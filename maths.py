@@ -28,11 +28,12 @@ class Continued(object):
     @classmethod
     def from_rational(cls, numerator, denominator):
         instance = cls()
-        while numerator != 1:
+        while denominator:
+            print numerator, denominator
             digit, numerator = divmod(numerator, denominator)
             instance.digitlist.append(digit)
             numerator, denominator = denominator, numerator
-        instance.digitlist.append(denominator)
+        instance.digitlist.append(numerator)
         instance.normalize()
         return instance
 
@@ -184,6 +185,9 @@ class Continued(object):
             raise ValueError, "Can't normalize infinite continued fractions!"
         try:
             while True:
+                if self.digitlist[-1] == 1:
+                    self.digitlist = self.digitlist[:-1]
+                    self.digitlist[-1] += 1
                 index = self.digitlist.index(0, 1)
                 if index == len(self.digitlist) + 1:
                     self.digitlist = self.digitlist[:-1]
