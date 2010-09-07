@@ -1,3 +1,4 @@
+import fractions
 import functools
 import itertools
 import math
@@ -50,6 +51,17 @@ class Continued(object):
         return instance
 
     @classmethod
+    def from_fraction(cls, fraction):
+        """
+        Create a new continued fraction from a `fractions.Fraction` instance.
+
+        Incidentally, this method works with any `numbers.Rational`
+        implementor, not just `Fraction`.
+        """
+
+        return cls.from_rational(fraction.numerator, fraction.denominator)
+
+    @classmethod
     def from_rational(cls, numerator, denominator):
         instance = cls()
         factor = gcd(numerator, denominator)
@@ -94,6 +106,17 @@ class Continued(object):
                     i += 2
                     mod = 0
         instance.make_digits = generator()
+        return instance
+
+    @classmethod
+    def phi(cls):
+        """
+        Generate phi, the golden ratio.
+        """
+
+        instance = cls()
+        instance.finite = False
+        instance.make_digits = itertools.repeat(1)
         return instance
 
     @classmethod
@@ -177,6 +200,29 @@ class Continued(object):
         return self.__div__(other)
 
     @property
+    def approximations(self):
+        """
+        Retrieve successively closer rational approximants lazily.
+        """
+
+        d = self.digits
+        oldoldp = next(d)
+        oldoldq = 1
+        yield oldoldp, oldoldq
+        digit = next(d)
+        oldp = digit * oldoldp + 1
+        oldq = digit
+        yield oldp, oldq
+        while True:
+            digit = next(d)
+            p = digit * oldp + oldoldp
+            q = digit * oldq + oldoldq
+            yield p, q
+            oldp, oldoldp = p, oldp
+            oldq, oldoldq = q, oldq
+
+
+    @property
     def digits(self):
         """
         Retrieve the digits of this continued fraction lazily.
@@ -187,6 +233,16 @@ class Continued(object):
         else:
             self.make_digits, retval = itertools.tee(self.make_digits)
             return retval
+
+    @property
+    def fractions(self):
+        """
+        A convenience property for retrieving fractional approximants as
+        `fractions.Fraction` instances.
+        """
+
+        for p, q in self.approximations:
+            yield fractions.Fraction(p, q)
 
     def combine(self, other, initial):
         # XXX this isn't quite right
