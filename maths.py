@@ -136,23 +136,31 @@ class Continued(object):
             return retval
 
     def combine(self, other, initial):
+        # XXX this isn't quite right
+        cls = Continued
+
         if isinstance(other, int):
             other = Continued.from_int(other)
 
+        instance = cls()
+        instance.x = self.digits
+        instance.y = other.digits
+        instance.make_digits = instance.combiner(initial)
+        if self.finite and other.finite:
+            instance.digitlist = list(instance.make_digits)
+        else:
+            instance.finite = False
+        return instance
+
+    def combiner(self, initial):
         a, b, c, d, e, f, g, h = initial
 
-        if self.finite:
-            iterx = itertools.chain(self.digits, itertools.repeat(None))
-        else:
-            iterx = self.digits()
-        if other.finite:
-            itery = itertools.chain(other.digits, itertools.repeat(None))
-        else:
-            itery = other.digits()
+        iterx = itertools.chain(self.x, itertools.repeat(None))
+        itery = itertools.chain(self.y, itertools.repeat(None))
 
-        result = Continued()
-        result.digits = []
-        channel = True
+        use_x = True
+        x_is_empty = False
+        y_is_empty = False
         while any((e, f, g, h)):
             old = a, b, c, d, e, f, g, h
             print old
@@ -166,35 +174,38 @@ class Continued(object):
                 # Output a term.
                 a, b, c, d, e, f, g, h = (e, f, g, h,
                     a - e * r, b - f * r, c - g * r, d - h * r)
-                result.digits.append(r)
+                yield r
+            elif x_is_empty and y_is_empty:
+                raise StopIteration
             else:
                 # Which input to choose?
                 # if None not in (ae, bf, cg) and abs(bf - ae) > abs(cg - ae):
-                if channel:
+                if use_x and not x_is_empty:
                     # Input from x.
                     p = next(iterx)
                     if p is None:
                         # Infinity: Replicate channels.
                         a, c, e, g = b, d, f, h
+                        x_is_empty = True
                     else:
                         # Ingestion.
                         a, b, c, d, e, f, g, h = (
                             b, a + b * p, d, c + d * p,
                             f, e + f * p, h, g + h * p)
-                else:
+                elif not y_is_empty:
                     # Input from y.
                     q = next(itery)
                     if q is None:
                         # Infinity: Replicate channels.
                         a, b, e, f = c, d, g, h
+                        y_is_empty = True
                     else:
                         # Ingestion.
                         a, b, c, d, e, f, g, h = (
                             c, d, a + c * q, b + d * q,
                             g, h, e + g * q, f + h * q)
             if old == (a, b, c, d, e, f, g, h):
-                channel = not channel
-        return result
+                use_x = not use_x
 
     def normalize(self):
         if not self.finite:
