@@ -2,6 +2,30 @@ import functools
 import itertools
 import math
 
+def regulated(i):
+    """
+    Given an iterator that yields (p q) generalized continued fraction tuples,
+    generate the corresponding regular continued fraction.
+    """
+
+    a, b, c, d = 0, 1, 1, 0
+    while True:
+        try:
+            p, q = next(i)
+            a, b, c, d = b * q, a + b * p, d * q, c + d * p
+
+            ac = a // c if c else None
+            bd = b // d if d else None
+
+            if ac and bd and ac == bd:
+                r = ac
+                a, b, c, d = c, d, a - c * r, b - d * r
+                yield r
+
+        except ValueError:
+            yield b
+            raise StopIteration
+
 class Continued(object):
     """
     An implementation of continued fractions.
@@ -70,6 +94,35 @@ class Continued(object):
                     i += 2
                     mod = 0
         instance.make_digits = generator()
+        return instance
+
+    @classmethod
+    def pi(cls):
+        """
+        Generate pi.
+
+        There are several formulae for pi as a generalized continued fraction,
+        including these three:
+
+         - (0 4); (1 1), (2 9), (2 25), (2 49), (2 81), ...
+         - (3 1); (6 9), (6 25), (6 49), (6 81), ...
+         - (0 4); (1 1), (3 4), (5 9), (7 16), ...
+
+        Of these three, the third grows the slowest and so it is the one
+        implmented here.
+        """
+
+        instance = cls()
+        instance.finite = False
+        def generator():
+            yield (0, 4)
+            p = 1
+            q = 1
+            while True:
+                yield (p, q**2)
+                p += 2
+                q += 1
+        instance.make_digits = regulated(generator())
         return instance
 
     @classmethod
