@@ -22,18 +22,17 @@ class Continued(object):
     @classmethod
     def from_int(cls, i):
         instance = cls()
-        instance.digits = [i]
+        instance.digitlist = [i]
         return instance
 
     @classmethod
     def from_rational(cls, numerator, denominator):
         instance = cls()
-        instance.digits = []
         while numerator != 1:
             digit, numerator = divmod(numerator, denominator)
-            instance.digits.append(digit)
+            instance.digitlist.append(digit)
             numerator, denominator = denominator, numerator
-        instance.digits.append(denominator)
+        instance.digitlist.append(denominator)
         instance.normalize()
         return instance
 
@@ -53,7 +52,7 @@ class Continued(object):
                     yield i
                     i += 2
                     mod = 0
-        instance.digits = generator
+        instance.make_digits = generator()
         return instance
 
     @classmethod
@@ -76,14 +75,21 @@ class Continued(object):
             iterator = itertools.cycle(repeating)
             while True:
                 yield next(iterator)
-        instance.digits = functools.partial(generator, i)
+        instance.make_digits = generator(i)
         return instance
+
+    def __init__(self):
+        self.digitlist = []
 
     def __repr__(self):
         return str(self)
 
     def __str__(self):
-        return "Continued(%s)" % self.digits
+        if self.finite:
+            l = self.digitlist
+        else:
+            l = list(itertools.islice(self.digits, 10)) + ["..."]
+        return "Continued(%s)" % l
 
     def __add__(self, other):
         return self.combine(other, (0, 1, 1, 0, 1, 0, 0, 0))
@@ -99,6 +105,18 @@ class Continued(object):
 
     def __truediv__(self, other):
         return self.__div__(other)
+
+    @property
+    def digits(self):
+        """
+        Retrieve the digits of this continued fraction lazily.
+        """
+
+        if self.finite:
+            return self.digitlsit
+        else:
+            self.make_digits, retval = itertools.tee(self.make_digits)
+            return retval
 
     def combine(self, other, initial):
         if isinstance(other, int):
