@@ -1,32 +1,55 @@
+#!/usr/bin/env python
+
 import itertools
 import math
 import pprint
+import sys
 
-from termcolor import colored, COLORS
+try:
+    from termcolor import colored, COLORS
+    color_names = COLORS.keys()
+    def print_depth(z):
+        print colored("X", color_names[z % len(color_names)], attrs=["bold"]),
+except ImportError:
+    def print_depth(z):
+        print chr(ord("A") + z),
 
-color_names = COLORS.keys()
+if len(sys.argv) < 2:
+    print "Usage: %s <circle|sphere> <size>" % sys.argv[0]
+    sys.exit()
 
-m = dict((t, False) for t in itertools.product(range(21), range(21), range(21)))
+if sys.argv[1] == "circle":
+    pass
+elif sys.argv[1] == "sphere":
+    if len(sys.argv) < 3:
+        print "Spheres need a size."
+        sys.exit()
 
-for i in range(20):
-    for j in range(20):
-        x = 20**2 - (i**2 + j**2)
-        if x >= 0:
-            m[i, j, int(round(math.sqrt(x)))] = True
+    size = int(sys.argv[2])
 
-for x, y, z in m.keys():
-    if m[x, y, z]:
-        m[y, x, z] = True
-        m[x, z, y] = True
-        m[z, y, x] = True
+    matrix = dict(
+        (t, False)
+        for t in itertools.product(range(size + 1), range(size + 1),
+            range(size + 1)))
 
-for y in range(21):
-    for x in range(21):
-        cell = [m[x, y, z] for z in range(21)]
-        if cell.count(True) == 0:
-            print ".",
-        else:
-            z = cell.index(True)
-            print colored("X", color_names[z % len(color_names)],
-            attrs=["bold"]),
-    print ""
+    for i in range(size):
+        for j in range(size):
+            x = size**2 - (i**2 + j**2)
+            if x >= 0:
+                matrix[i, j, int(round(math.sqrt(x)))] = True
+
+    for x, y, z in matrix.keys():
+        if matrix[x, y, z]:
+            matrix[y, x, z] = True
+            matrix[x, z, y] = True
+            matrix[z, y, x] = True
+
+    for y in range(size + 1):
+        for x in range(size + 1):
+            cell = [matrix[x, y, z] for z in range(size + 1)]
+            if cell.count(True) == 0:
+                print ".",
+            else:
+                z = cell.index(True)
+                print_depth(z)
+        print ""
