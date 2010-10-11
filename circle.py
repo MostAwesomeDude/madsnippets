@@ -19,7 +19,33 @@ if len(sys.argv) < 2:
     sys.exit()
 
 if sys.argv[1] == "circle":
-    pass
+    if len(sys.argv) < 3:
+        print "Circles need a size."
+        sys.exit()
+
+    size = int(sys.argv[2])
+
+    matrix = dict(
+        (t, False)
+        for t in itertools.product(range(size + 1), range(size + 1)))
+
+    for i in range(size):
+        x = size**2 - i**2
+        if x >= 0:
+            matrix[i, int(round(math.sqrt(x)))] = True
+
+    for x, y in matrix.keys():
+        if matrix[x, y]:
+            matrix[y, x] = True
+
+    for y in range(size + 1):
+        for x in range(size + 1):
+            if matrix[x, y]:
+                print "X",
+            else:
+                print ".",
+        print ""
+
 elif sys.argv[1] == "sphere":
     if len(sys.argv) < 3:
         print "Spheres need a size."
