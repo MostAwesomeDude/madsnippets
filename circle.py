@@ -79,3 +79,38 @@ elif sys.argv[1] == "sphere":
                 z = cell.index(True)
                 print_depth(z)
         print ""
+
+elif sys.argv[1] == "torus":
+    if len(sys.argv) < 4:
+        print "Tori need an inner and outer radius."
+        sys.exit()
+
+    r = int(sys.argv[2])
+    R = int(sys.argv[3])
+
+    size = r + R + 1
+
+    matrix = dict(
+        (t, False)
+        for t in itertools.product(range(size + 1), range(size + 1),
+            range(size + 1)))
+
+    for i in range(size):
+        for j in range(size):
+            x = r**2 - (R - math.sqrt(i**2 + j**2))**2
+            if x >= 0:
+                matrix[i, j, int(round(math.sqrt(x)))] = True
+
+    for x, y, z in matrix.keys():
+        if matrix[x, y, z]:
+            matrix[y, x, z] = True
+
+    for y in range(size + 1):
+        for x in range(size + 1):
+            cell = [matrix[x, y, z] for z in range(size + 1)]
+            if cell.count(True) == 0:
+                print ".",
+            else:
+                z = cell.index(True)
+                print_depth(z)
+        print ""
