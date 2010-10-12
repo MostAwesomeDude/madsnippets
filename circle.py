@@ -20,7 +20,7 @@ except ImportError:
         print chr(ord("A") + z),
 
 if len(sys.argv) < 2:
-    print "Usage: %s <circle|sphere> <size>" % sys.argv[0]
+    print "Usage: %s <circle|torus|sphere> <size>" % sys.argv[0]
     sys.exit()
 
 if sys.argv[1] == "circle":
