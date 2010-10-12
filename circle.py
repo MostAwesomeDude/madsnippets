@@ -10,6 +10,11 @@ try:
     color_names = COLORS.keys()
     def print_depth(z):
         print colored("X", color_names[z % len(color_names)], attrs=["bold"]),
+    print "Color key:"
+    for i in range(len(color_names)):
+        print i,
+        print_depth(i)
+        print ""
 except ImportError:
     def print_depth(z):
         print chr(ord("A") + z),
