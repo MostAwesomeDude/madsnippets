@@ -150,31 +150,37 @@ def step(polygons):
 
     return new
 
-def save(polygons):
-    import pickle
-    pickle.dump(polygons, open("dump.pickle", "wb"))
+def load(filename):
+    return pickle.load(open(filename, "rb"))
+
+def save(state, filename):
+    pickle.dump(state, open(filename, "wb"))
 
 def main():
     surface = pygame.image.load(sys.argv[1])
+    pickle_name = "%s.pickle" % sys.argv[1]
     width, height = surface.get_size()
     pygame.display.init()
     pygame.display.set_mode((width * 2, height), pygame.DOUBLEBUF)
     target_surface = surface.convert()
 
-    error = 255 * 255 * 255 * width * height
-    generation = 0
-    polygons = DnaPolygonList()
-    polygons.w = width
-    polygons.h = height
-    for i in range(15):
-        polygons.append(DnaPolygon(width, height))
+    if os.path.exists(pickle_name):
+        generation, error, polygons = load(pickle_name)
+    else:
+        error = 255 * 255 * 255 * width * height
+        generation = 0
+        polygons = DnaPolygonList()
+        polygons.w = width
+        polygons.h = height
+        for i in range(15):
+            polygons.append(DnaPolygon(width, height))
     poly_surface = polygons.draw()
     draw(surface, poly_surface, width)
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                save(polygons)
+                save((generation, error, polygons), pickle_name)
                 sys.exit()
 
         generation += 1
