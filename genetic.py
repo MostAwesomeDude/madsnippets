@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+
+import os
+import pickle
 from random import randrange
 import sys
 
