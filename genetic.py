@@ -71,29 +71,21 @@ class DnaPolygon(object):
         self.color.append(randrange(20, 120))
 
     def add_vertex(self):
-        if len(self.vertices) == 10:
-            return False
-
         stats("New vertex")
         self.vertices.insert(randrange(len(self.vertices)),
             DnaPoint(self.w, self.h))
-        return True
 
     def remove_vertex(self):
-        if len(self.vertices) == 3:
-            return False
-
         stats("Dropped vertex")
         self.vertices.pop(randrange(len(self.vertices)))
-        return True
 
     def mutate(self):
         mutations = 0
 
-        if not randrange(1500):
+        if len(self.vertices) < 10 and not randrange(1500):
             if self.add_vertex():
                 mutations += 1
-        if not randrange(1500):
+        if len(self.vertices) > 3 and not randrange(1500):
             if self.remove_vertex():
                 mutations += 1
         for index in range(3):
@@ -118,11 +110,11 @@ class DnaPolygonList(list):
     def mutate(self):
         mutations = 0
 
-        if not randrange(200):
+        if len(self) < 150 and not randrange(700):
             stats("New polygon")
             self.insert(randrange(len(self)), DnaPolygon(self.w, self.h))
             mutations += 1
-        if not randrange(1500):
+        if len(self) > 10 and not randrange(1500):
             stats("Dropped polygon")
             self.pop(randrange(len(self)))
             mutations += 1
