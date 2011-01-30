@@ -4,6 +4,7 @@ import os
 import pickle
 from random import randrange
 import sys
+import time
 
 import numpy
 import pygame
@@ -25,18 +26,18 @@ class DnaPoint(object):
         retval = False
 
         # Point max mutation
-        if not randrange(1500):
+        if not randrange(150):
             self.x = randrange(self.w)
             self.y = randrange(self.h)
             retval = True
         # Point mid mutation
-        if not randrange(1500):
+        if not randrange(150):
             distance = randrange(-20, 20)
             self.x += distance
             self.y += distance
             retval = True
         # Point min mutation
-        if not randrange(1500):
+        if not randrange(150):
             distance = randrange(-3, 3)
             self.x += distance
             self.y += distance
@@ -76,18 +77,18 @@ class DnaPolygon(object):
     def mutate(self):
         retval = False
 
-        if not randrange(1500):
+        if not randrange(150):
             self.add_vertex()
             retval = True
-        if not randrange(1500):
+        if not randrange(150):
             self.remove_vertex()
             retval = True
         for index in range(3):
-            if not randrange(1500):
+            if not randrange(150):
                 self.color[index] = randrange(256)
                 retval = True
         # Alpha is special
-        if not randrange(1500):
+        if not randrange(150):
             self.color[3] = randrange(20, 120)
             retval = True
 
@@ -102,13 +103,13 @@ class DnaPolygonList(list):
     def mutate(self):
         retval = False
 
-        if not randrange(700):
+        if not randrange(70):
             self.insert(randrange(len(self)), DnaPolygon(self.w, self.h))
             retval = True
-        if not randrange(1500):
+        if not randrange(150):
             self.pop(randrange(len(self)))
             retval = True
-        if not randrange(1500):
+        if not randrange(150):
             first, second = randrange(len(self)), randrange(len(self))
             if first != second:
                 self[first], self[second] = self[second], self[first]
@@ -133,20 +134,29 @@ def fitness(original, sketch):
     difference = first - second
     return numpy.abs(difference).sum()
 
-def draw(original, sketch, width):
+def draw(original, polygons, width):
+    sketch = polygons.draw()
+
     window = pygame.display.get_surface()
+    window.fill((0, 0, 0))
     window.blit(sketch, (0, 0))
     window.blit(original, (width, 0))
     pygame.display.flip()
 
+iterations = 0
+
 def step(polygons):
+    global iterations
+
     new = DnaPolygonList(polygons)
     new.w = polygons.w
     new.h = polygons.h
 
     mutated = new.mutate()
+    iterations += 1
     while not mutated:
         mutated = new.mutate()
+        iterations += 1
 
     return new
 
@@ -157,6 +167,7 @@ def save(state, filename):
     pickle.dump(state, open(filename, "wb"))
 
 def main():
+    start_time = time.time()
     surface = pygame.image.load(sys.argv[1])
     pickle_name = "%s.pickle" % sys.argv[1]
     width, height = surface.get_size()
@@ -174,13 +185,13 @@ def main():
         polygons.h = height
         for i in range(15):
             polygons.append(DnaPolygon(width, height))
-    poly_surface = polygons.draw()
-    draw(surface, poly_surface, width)
+    draw(surface, polygons, width)
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 save((generation, error, polygons), pickle_name)
+                pygame.image.save(polygons.draw(), "sketch.%s" % sys.argv[1])
                 sys.exit()
 
         generation += 1
@@ -190,9 +201,17 @@ def main():
         if new_error < error:
             error = new_error
             polygons = new
-            print "Generation %d, error %d, polygons %d" % (
-                generation, error, len(polygons))
-            draw(target_surface, poly_surface, width)
+            status = "Generation %d, IPS %d, error %d, polygons %d" % (
+                generation, iterations / (time.time() - start_time), error,
+                len(polygons))
+            print status
+            pygame.display.set_caption(status)
+            draw(target_surface, polygons, width)
+        elif not generation % 1000:
+            status = "Generation %d, IPS %d" % (generation, iterations /
+                (time.time() - start_time))
+            print status
+            pygame.display.set_caption(status)
 
 if __name__ == "__main__":
     main()
