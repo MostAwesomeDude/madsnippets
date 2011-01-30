@@ -118,7 +118,7 @@ class DnaPolygonList(list):
     def mutate(self):
         mutations = 0
 
-        if not randrange(700):
+        if not randrange(200):
             stats("New polygon")
             self.insert(randrange(len(self)), DnaPolygon(self.w, self.h))
             mutations += 1
@@ -139,16 +139,17 @@ class DnaPolygonList(list):
         return mutations
 
     def draw(self):
-        surface = pygame.Surface((self.w, self.h), pygame.SRCALPHA, 32)
+        surface = pygame.Surface((self.w, self.h))
+        surface.fill((0, 0, 0))
         for polygon in self:
             points = [(point.x, point.y) for point in polygon.vertices]
             pygame.gfxdraw.filled_polygon(surface, points, polygon.color)
+            pygame.gfxdraw.aapolygon(surface, points, polygon.color)
         return surface
 
-def fitness(original, sketch):
-    first = pygame.surfarray.pixels3d(original)
-    second = pygame.surfarray.pixels3d(sketch)
-    difference = first - second
+def fitness(original_array, sketch):
+    sketch_array = pygame.surfarray.pixels3d(sketch)
+    difference = original_array - sketch_array
     return numpy.square(difference).sum()
 
 def draw(original, polygons, width):
@@ -189,6 +190,8 @@ def main():
     pygame.display.init()
     pygame.display.set_mode((width * 2, height), pygame.DOUBLEBUF)
     target_surface = surface.convert()
+    target_array = numpy.cast[numpy.int8](
+        pygame.surfarray.array3d(target_surface))
 
     if os.path.exists(pickle_name):
         generation, error, polygons = load(pickle_name)
@@ -198,7 +201,7 @@ def main():
         polygons = DnaPolygonList()
         polygons.w = width
         polygons.h = height
-        for i in range(15):
+        for i in range(20):
             polygons.append(DnaPolygon(width, height))
     draw(surface, polygons, width)
 
@@ -209,10 +212,10 @@ def main():
                 pygame.image.save(polygons.draw(), "sketch.%s" % sys.argv[1])
                 sys.exit()
 
+        generation += 1
         new = step(polygons)
-        new_error = fitness(target_surface, new.draw())
+        new_error = fitness(target_array, new.draw())
         if new_error <= error:
-            generation += 1
             error = new_error
             polygons = new
             draw(target_surface, polygons, width)
