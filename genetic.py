@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from collections import defaultdict
+from copy import deepcopy
 import os
 import pickle
 from random import randrange
@@ -13,6 +15,12 @@ import pygame.gfxdraw
 def clamp(i, low, high):
     return min(max(i, low), high)
 
+def stats(name, d=defaultdict(int)):
+    return
+    d[name] += 1
+    if not d[name] % 100:
+        print "%s mutations: %d" % (name, d[name])
+
 class DnaPoint(object):
 
     def __init__(self, w, h):
@@ -23,31 +31,34 @@ class DnaPoint(object):
         self.y = randrange(h)
 
     def mutate(self):
-        retval = False
+        mutations = 0
 
         # Point max mutation
-        if not randrange(150):
+        if not randrange(1500):
+            stats("Point maximal")
             self.x = randrange(self.w)
             self.y = randrange(self.h)
-            retval = True
+            mutations += 1
         # Point mid mutation
-        if not randrange(150):
+        if not randrange(1500):
+            stats("Point medium")
             distance = randrange(-20, 20)
             self.x += distance
             self.y += distance
-            retval = True
+            mutations += 1
         # Point min mutation
-        if not randrange(150):
+        if not randrange(1500):
+            stats("Point minimal")
             distance = randrange(-3, 3)
             self.x += distance
             self.y += distance
-            retval = True
+            mutations += 1
 
         # Clamp
         self.x = clamp(self.x, 0, self.w)
         self.y = clamp(self.y, 0, self.h)
 
-        return retval
+        return mutations
 
 class DnaPolygon(object):
 
@@ -63,6 +74,7 @@ class DnaPolygon(object):
         if len(self.vertices) == 10:
             return False
 
+        stats("New vertex")
         self.vertices.insert(randrange(len(self.vertices)),
             DnaPoint(self.w, self.h))
         return True
@@ -71,55 +83,60 @@ class DnaPolygon(object):
         if len(self.vertices) == 3:
             return False
 
+        stats("Dropped vertex")
         self.vertices.pop(randrange(len(self.vertices)))
         return True
 
     def mutate(self):
-        retval = False
+        mutations = 0
 
-        if not randrange(150):
-            self.add_vertex()
-            retval = True
-        if not randrange(150):
-            self.remove_vertex()
-            retval = True
+        if not randrange(1500):
+            if self.add_vertex():
+                mutations += 1
+        if not randrange(1500):
+            if self.remove_vertex():
+                mutations += 1
         for index in range(3):
-            if not randrange(150):
+            if not randrange(1500):
+                stats("Changed color")
                 self.color[index] = randrange(256)
-                retval = True
+                mutations += 1
         # Alpha is special
-        if not randrange(150):
+        if not randrange(1500):
+            stats("Changed alpha")
             self.color[3] = randrange(20, 120)
-            retval = True
+            mutations += 1
 
         for vertex in self.vertices:
             if vertex.mutate():
-                retval = True
+                mutations += 1
 
-        return retval
+        return mutations
 
 class DnaPolygonList(list):
 
     def mutate(self):
-        retval = False
+        mutations = 0
 
-        if not randrange(70):
+        if not randrange(700):
+            stats("New polygon")
             self.insert(randrange(len(self)), DnaPolygon(self.w, self.h))
-            retval = True
-        if not randrange(150):
+            mutations += 1
+        if not randrange(1500):
+            stats("Dropped polygon")
             self.pop(randrange(len(self)))
-            retval = True
-        if not randrange(150):
+            mutations += 1
+        if not randrange(700):
+            stats("Reordered polygon")
             first, second = randrange(len(self)), randrange(len(self))
-            if first != second:
-                self[first], self[second] = self[second], self[first]
-                retval = True
+            self[first], self[second] = self[second], self[first]
+            mutations += 1
 
         for polygon in self:
             if polygon.mutate():
-                retval = True
+                mutations += 1
 
-        return retval
+        return mutations
 
     def draw(self):
         surface = pygame.Surface((self.w, self.h), pygame.SRCALPHA, 32)
@@ -132,7 +149,7 @@ def fitness(original, sketch):
     first = pygame.surfarray.pixels3d(original)
     second = pygame.surfarray.pixels3d(sketch)
     difference = first - second
-    return numpy.abs(difference).sum()
+    return numpy.square(difference).sum()
 
 def draw(original, polygons, width):
     sketch = polygons.draw()
@@ -148,14 +165,12 @@ iterations = 0
 def step(polygons):
     global iterations
 
-    new = DnaPolygonList(polygons)
-    new.w = polygons.w
-    new.h = polygons.h
+    new = deepcopy(polygons)
 
-    mutated = new.mutate()
+    mutations = new.mutate()
     iterations += 1
-    while not mutated:
-        mutated = new.mutate()
+    while not mutations:
+        mutations = new.mutate()
         iterations += 1
 
     return new
@@ -178,7 +193,7 @@ def main():
     if os.path.exists(pickle_name):
         generation, error, polygons = load(pickle_name)
     else:
-        error = 255 * 255 * 255 * width * height
+        error = 65536**3 * width * height
         generation = 0
         polygons = DnaPolygonList()
         polygons.w = width
@@ -194,24 +209,21 @@ def main():
                 pygame.image.save(polygons.draw(), "sketch.%s" % sys.argv[1])
                 sys.exit()
 
-        generation += 1
         new = step(polygons)
-        poly_surface = polygons.draw()
-        new_error = fitness(target_surface, poly_surface)
-        if new_error < error:
+        new_error = fitness(target_surface, new.draw())
+        if new_error <= error:
+            generation += 1
             error = new_error
             polygons = new
-            status = "Generation %d, IPS %d, error %d, polygons %d" % (
-                generation, iterations / (time.time() - start_time), error,
-                len(polygons))
-            print status
-            pygame.display.set_caption(status)
             draw(target_surface, polygons, width)
-        elif not generation % 1000:
-            status = "Generation %d, IPS %d" % (generation, iterations /
-                (time.time() - start_time))
-            print status
-            pygame.display.set_caption(status)
+        elif generation % 1000:
+            continue
+
+        status = "Generation %d, IPS %d, error %d, polygons %d" % (
+            generation, iterations / (time.time() - start_time), error,
+            len(polygons))
+        print status
+        pygame.display.set_caption(status)
 
 if __name__ == "__main__":
     main()
