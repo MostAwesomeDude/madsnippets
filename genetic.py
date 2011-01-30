@@ -150,7 +150,7 @@ class DnaPolygonList(list):
 def fitness(original_array, sketch):
     sketch_array = pygame.surfarray.pixels3d(sketch)
     difference = original_array - sketch_array
-    return numpy.square(difference).sum()
+    return numpy.square(difference).sum(dtype=numpy.uint64)
 
 def draw(original, polygons, width):
     sketch = polygons.draw()
@@ -190,7 +190,7 @@ def main():
     pygame.display.init()
     pygame.display.set_mode((width * 2, height), pygame.DOUBLEBUF)
     target_surface = surface.convert()
-    target_array = numpy.cast[numpy.int8](
+    target_array = numpy.cast[numpy.int32](
         pygame.surfarray.array3d(target_surface))
 
     if os.path.exists(pickle_name):
@@ -215,7 +215,7 @@ def main():
         generation += 1
         new = step(polygons)
         new_error = fitness(target_array, new.draw())
-        if new_error <= error:
+        if new_error < error:
             error = new_error
             polygons = new
             draw(target_surface, polygons, width)
