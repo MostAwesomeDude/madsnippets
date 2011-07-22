@@ -1,4 +1,3 @@
-import itertools
 import math
 
 def gcd(a, b):
