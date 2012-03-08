@@ -69,12 +69,15 @@ def lazyfactor(x):
 
     while x > 1:
         prime = True
-        for i in xrange(2, long(math.sqrt(x)) + 1):
+        top = math.sqrt(x)
+        for i in xrange(2, long(top) + 1):
             if not x % i:
                 yield i
                 x /= i
                 prime = False
                 break
+            if not i % 10000000:
+                print "%d/%d (%f%%)" % (i, top, 100.0 * i / top)
         if prime:
             yield x
             break
