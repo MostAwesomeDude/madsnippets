@@ -2,11 +2,10 @@
 
 from __future__ import division
 
-import itertools
+from itertools import islice, takewhile
 import os
 import pickle
 import random
-import sys
 import time
 
 widescreen = False
@@ -34,6 +33,9 @@ HEIGHT *= 2
 COUNT = 20000
 PLOTGOAL = 500000
 
+PLOTTED = object()
+SKIPPED = object()
+
 invalid_ranges = (
     (-1.2, -1.1, 0, 0.1),
     (-1.1, -0.9, 0, 0.2),
@@ -54,6 +56,9 @@ def checkrange(c):
 
     return True
 
+def bounded(c):
+    return MINH < c.real < MAXH and MINW < c.imag < MAXW
+
 def mma(old, new, weight=100):
     """
     Performs a Moving Modified Average, using the old value, new value,
@@ -64,6 +69,38 @@ def mma(old, new, weight=100):
 
     return ((weight - 1) * old + new) / weight
 
+def ibrot(c):
+    """
+    Yield a list of Mandelbrot numbers.
+
+    Mandelbrot numbers are given by z = z**2 + c, where z starts at c and then
+    iterates recursively.
+    """
+
+    z = c
+
+    while True:
+        z = z**2 + c
+        yield z
+
+def worker():
+    c = complex(random.uniform(MINH, MAXH), random.uniform(MINW, MAXW))
+
+    if not checkrange(c):
+        return SKIPPED
+
+    brots = list(islice(takewhile(bounded, ibrot(c)), COUNT))
+
+    if 20 >= len(brots):
+        return SKIPPED
+
+    for z in brots:
+        pixw = int((z.imag - MINW) * WIDTH/(MAXW-MINW))
+        pixh = int((z.real - MINH) * HEIGHT/(MAXH-MINH))
+        pixels[pixw][pixh] += 1
+
+    return PLOTTED
+
 print "Making pixel array..."
 
 pixels = [[0 for j in xrange(HEIGHT)] for i in xrange(WIDTH)]
@@ -73,40 +110,20 @@ print "Getting started..."
 t = time.time()
 
 try:
-    total, plotted, skipped, avg_iters = 0, 0, 0, 0
+    total, plotted, skipped = 0, 0, 0
     while plotted < PLOTGOAL:
-        c = complex(random.uniform(MINH, MAXH), random.uniform(MINW, MAXW))
-        i = 0
-        if not checkrange(c):
-            total += 1
+        rv = worker()
+
+        if rv is PLOTTED:
+            plotted += 1
+        elif rv is SKIPPED:
             skipped += 1
-            continue
-        z = c
-        while MINH < z.real < MAXH and MINW < z.imag < MAXW and i < COUNT:
-            z = z**2 + c
-            i += 1
-
-        if i < 20 or i == COUNT:
-            continue
-
-        avg_iters = mma(avg_iters, i)
-
-        plotted += 1
-        z = c**2 + c
-        pixw = int((z.imag - MINW) * WIDTH/(MAXW-MINW))
-        pixh = int((z.real - MINH) * HEIGHT/(MAXH-MINH))
-
-        while i and (0 <= pixw < WIDTH) and (0 <= pixh < HEIGHT):
-            z = z**2 + c
-            pixels[pixw][pixh] += 1
-            pixw = int((z.imag - MINW) * WIDTH/(MAXW-MINW))
-            pixh = int((z.real - MINH) * HEIGHT/(MAXH-MINH))
-            i -= 1
 
         total += 1
         if not total % 1000:
-            print ("Points (plotted/skipped/total): %d/%d/%d Avg. iters. %d" %
-                (plotted, skipped, total, avg_iters))
+            elapsed = time.time() - t
+            print ("Points (plotted/skipped/total): %d/%d/%d (%.2f/s)" %
+                (plotted, skipped, total, plotted / elapsed))
 
 except KeyboardInterrupt:
     print ("Total of %d points, skipped %d (%.2f%%) plotted %d (%.2f%%)" %
