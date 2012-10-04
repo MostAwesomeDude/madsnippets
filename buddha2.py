@@ -4,6 +4,7 @@ from __future__ import division
 
 import itertools
 import pickle
+import sys
 
 import Image
 
