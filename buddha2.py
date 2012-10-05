@@ -10,22 +10,24 @@ import Image
 
 def get_color(value):
     v = int(value * 255)
-    if value > 0.9:
+    if value > 3/4:
         return (255, 51, 204) # violet
-    elif value > 0.8:
+    elif value > 1/2:
         return (255, 204, 0) # gold
-    elif value > 0.7:
+    elif value > 8/64:
         return (255, 255, 204) # silver
-    elif value > 0.6:
+    elif value > 7/64:
         return (v, 255, v) # greens
-    elif value > 0.4:
+    elif value > 6/64:
         return (204, v + 51, v + 51) # reds
-    elif value > 0.2:
+    elif value > 5/64:
         return (v + 102, v + 51, 102) # blues
-    elif value > 0.05:
+    elif value > 4/64:
         return (v + 51, v + 51, v + 51) # grays
+    elif value:
+        return (v, v, v) # blacks
     else:
-        return (0, 0, 0) # blacks
+        return (0, 0, 0) # No hits at all
 
 def fair_color(value):
     v = int(value * 768)
@@ -34,6 +36,10 @@ def fair_color(value):
     b = min(255, max(v - 256, 0))
 
     return (r, g, b)
+
+def lum(value):
+    v = int(value * 255)
+    return (v, v, v)
 
 def load_file(path):
     pixels = pickle.load(open(path, "r"))
@@ -72,6 +78,7 @@ for (i, j) in product(xrange(w), xrange(h)):
     value = base[i][j] / maxdepth
     out.putpixel((i, j), get_color(value))
     #out.putpixel((i, j), fair_color(value))
+    #out.putpixel((i, j), lum(value))
 
 print "Resampling..."
 

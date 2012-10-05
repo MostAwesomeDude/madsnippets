@@ -32,8 +32,8 @@ else:
 WIDTH *= 2
 HEIGHT *= 2
 
-LOWER = 5
-UPPER = 1000
+LOWER = 10
+UPPER = 2000
 PLOTGOAL = 500000
 
 PLOTTED = object()
@@ -102,7 +102,7 @@ def worker():
     if not LOWER < len(brots) < UPPER:
         return SKIPPED
 
-    #plot(c, 5)
+    plot(c, 5)
 
     for z in brots:
         plot(z, 1)
