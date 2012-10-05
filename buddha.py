@@ -89,22 +89,23 @@ def ibrot(c):
 
     return l
 
-def worker():
-    bad = True
+def plot(z, x):
+    pixw = int((z.imag - MINW) * WIDTH/(MAXW-MINW))
+    pixh = int((z.real - MINH) * HEIGHT/(MAXH-MINH))
+    pixels[pixw][pixh] += x
 
-    while bad:
-        c = complex(r.uniform(MINH, MAXH), r.uniform(MINW, MAXW))
-        bad = checkrange(c)
+def worker():
+    c = complex(r.uniform(MINH, MAXH), r.uniform(MINW, MAXW))
 
     brots = list(islice(takewhile(bounded, ibrot(c)), UPPER))
 
-    if LOWER > len(brots):
+    if not LOWER < len(brots) < UPPER:
         return SKIPPED
 
+    #plot(c, 5)
+
     for z in brots:
-        pixw = int((z.imag - MINW) * WIDTH/(MAXW-MINW))
-        pixh = int((z.real - MINH) * HEIGHT/(MAXH-MINH))
-        pixels[pixw][pixh] += 1
+        plot(z, 1)
 
     return PLOTTED
 
