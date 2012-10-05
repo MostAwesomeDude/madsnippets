@@ -8,6 +8,9 @@ import sys
 
 import Image
 
+def clamp(x):
+    return min(255, max(0, x))
+
 def get_color(value):
     v = int(value * 255)
     if value > 3/4:
@@ -74,11 +77,23 @@ maxdepth = max(max(j for j in i) for i in base)
 
 print "Max depth is %d" % maxdepth
 
+print "Calculating mean depth..."
+
+meandepth = sum(j for i in base for j in i) / (w * h)
+
+print "Mean depth is %f" % meandepth
+
+print "Calculating median depth..."
+
+mediandepth = sorted(j for i in base for j in i)[w * h // 2]
+
+print "Median depth is %d" % mediandepth
+
 for (i, j) in product(xrange(w), xrange(h)):
     value = base[i][j] / maxdepth
-    out.putpixel((i, j), get_color(value))
+    #out.putpixel((i, j), get_color(value))
     #out.putpixel((i, j), fair_color(value))
-    #out.putpixel((i, j), lum(value))
+    out.putpixel((i, j), lum(value))
 
 print "Resampling..."
 
