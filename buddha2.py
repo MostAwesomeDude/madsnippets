@@ -2,7 +2,7 @@
 
 from __future__ import division
 
-import itertools
+from itertools import product
 import pickle
 import sys
 
@@ -35,34 +35,45 @@ def fair_color(value):
 
     return (r, g, b)
 
-filenames = sys.argv[1:]
+def load_file(path):
+    pixels = pickle.load(open(path, "r"))
+    w, h = len(pixels), len(pixels[0])
+    print "Loaded %dx%d array of values!" % (w, h)
+    return pixels
 
-pixel_arrays = []
+first = sys.argv[1]
+filenames = sys.argv[2:]
+
+base = load_file(first)
+w = len(base)
+h = len(base[0])
+
+print "Will use %dx%d for dimensions" % (w, h)
 
 for filename in filenames:
-    pixels = pickle.load(open(filename, "r"))
-    WIDTH, HEIGHT = len(pixels), len(pixels[0])
-    print "Loaded %dx%d array of values!" % (WIDTH, HEIGHT)
-    pixel_arrays.append(pixels)
+    pixels = load_file(filename)
+    if len(pixels) != w or len(pixels[0]) != h:
+        print "Discarding %r: Wrong size" % filename
+    else:
+        for i, j in product(xrange(w), xrange(h)):
+            base[i][j] += pixels[i][j]
 
-pixels = pixel_arrays[0]
-
-out = Image.new("RGB",(WIDTH, HEIGHT))
+out = Image.new("RGB",(w, h))
 
 maxdepth = 0
 
 print "Calculating max depth..."
 
-maxdepth = max(max(j for j in i) for i in pixels)
+maxdepth = max(max(j for j in i) for i in base)
 
 print "Max depth is %d" % maxdepth
 
-for (i, j) in itertools.product(xrange(WIDTH), xrange(HEIGHT)):
-    value = pixels[i][j] / maxdepth
-    #out.putpixel((i, j), get_color(value))
-    out.putpixel((i, j), fair_color(value))
+for (i, j) in product(xrange(w), xrange(h)):
+    value = base[i][j] / maxdepth
+    out.putpixel((i, j), get_color(value))
+    #out.putpixel((i, j), fair_color(value))
 
 print "Resampling..."
 
-out = out.resize((WIDTH//2, HEIGHT//2), Image.ANTIALIAS)
+out = out.resize((w // 2, h // 2), Image.ANTIALIAS)
 out.save("buddha.png")
