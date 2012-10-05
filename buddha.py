@@ -5,8 +5,10 @@ from __future__ import division
 from itertools import islice, takewhile
 import os
 import pickle
-import random
+from random import SystemRandom
 import time
+
+r = SystemRandom()
 
 widescreen = False
 
@@ -30,7 +32,8 @@ else:
 WIDTH *= 2
 HEIGHT *= 2
 
-COUNT = 20000
+LOWER = 5
+UPPER = 1000
 PLOTGOAL = 500000
 
 PLOTTED = object()
@@ -51,10 +54,10 @@ def checkrange(c):
     # Borrowed from Evercat on Wikipedia
 
     for (mini, maxi, minj, maxj) in invalid_ranges:
-        if mini < c.real <= maxi and minj < abs(c.imag) < maxj:
-            return False
+        if mini < c.real < maxi and minj < abs(c.imag) < maxj:
+            return True
 
-    return True
+    return False
 
 def bounded(c):
     return MINH < c.real < MAXH and MINW < c.imag < MAXW
@@ -78,20 +81,24 @@ def ibrot(c):
     """
 
     z = c
+    l = []
 
-    while True:
-        z = z**2 + c
-        yield z
+    for i in range(UPPER):
+        z = z * z + c
+        l.append(z)
+
+    return l
 
 def worker():
-    c = complex(random.uniform(MINH, MAXH), random.uniform(MINW, MAXW))
+    bad = True
 
-    if not checkrange(c):
-        return SKIPPED
+    while bad:
+        c = complex(r.uniform(MINH, MAXH), r.uniform(MINW, MAXW))
+        bad = checkrange(c)
 
-    brots = list(islice(takewhile(bounded, ibrot(c)), COUNT))
+    brots = list(islice(takewhile(bounded, ibrot(c)), UPPER))
 
-    if 20 >= len(brots):
+    if LOWER > len(brots):
         return SKIPPED
 
     for z in brots:
