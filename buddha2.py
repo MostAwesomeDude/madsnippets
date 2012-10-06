@@ -13,11 +13,7 @@ def clamp(x):
 
 def get_color(value):
     v = int(value * 255)
-    if value > 3/4:
-        return (255, 51, 204) # violet
-    elif value > 1/2:
-        return (255, 204, 0) # gold
-    elif value > 8/64:
+    if value > 8/64:
         return (255, 255, 204) # silver
     elif value > 7/64:
         return (v, 255, v) # greens
@@ -91,9 +87,9 @@ print "Median depth is %d" % mediandepth
 
 for (i, j) in product(xrange(w), xrange(h)):
     value = base[i][j] / maxdepth
-    #out.putpixel((i, j), get_color(value))
+    out.putpixel((i, j), get_color(value))
     #out.putpixel((i, j), fair_color(value))
-    out.putpixel((i, j), lum(value))
+    #out.putpixel((i, j), lum(value))
 
 print "Resampling..."
 

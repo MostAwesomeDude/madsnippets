@@ -33,11 +33,15 @@ WIDTH *= 2
 HEIGHT *= 2
 
 LOWER = 10
-UPPER = 2000
-PLOTGOAL = 500000
+UPPER = 20000
+
+# This can't be smaller than 2.2e-16 or so. Not that you'd attempt that,
+# anyway...
+EPSILON = 1e-6
 
 PLOTTED = object()
-SKIPPED = object()
+SHORT = object()
+LONG = object()
 
 invalid_ranges = (
     (-1.2, -1.1, 0, 0.1),
@@ -55,9 +59,9 @@ def checkrange(c):
 
     for (mini, maxi, minj, maxj) in invalid_ranges:
         if mini < c.real < maxi and minj < abs(c.imag) < maxj:
-            return True
+            return False
 
-    return False
+    return True
 
 def bounded(c):
     return MINH < c.real < MAXH and MINW < c.imag < MAXW
@@ -81,28 +85,33 @@ def ibrot(c):
     """
 
     z = c
-    l = []
 
-    for i in range(UPPER):
+    while True:
         z = z * z + c
-        l.append(z)
+        yield z
+        if abs(z) > 2:
+            break
 
-    return l
+def targets():
+    for i in xrange(500000):
+        c = complex(r.uniform(MINH, MAXH), r.uniform(0, MAXW))
+        if checkrange(c):
+            yield c
+            yield complex(c.real, -c.imag)
 
 def plot(z, x):
     pixw = int((z.imag - MINW) * WIDTH/(MAXW-MINW))
     pixh = int((z.real - MINH) * HEIGHT/(MAXH-MINH))
     pixels[pixw][pixh] += x
 
-def worker():
-    c = complex(r.uniform(MINH, MAXH), r.uniform(MINW, MAXW))
+def worker(c):
 
     brots = list(islice(takewhile(bounded, ibrot(c)), UPPER))
 
-    if not LOWER < len(brots) < UPPER:
-        return SKIPPED
-
-    plot(c, 5)
+    if LOWER > len(brots):
+        return SHORT
+    if UPPER <= len(brots):
+        return LONG
 
     for z in brots:
         plot(z, 1)
@@ -118,24 +127,27 @@ print "Getting started..."
 t = time.time()
 
 try:
-    total, plotted, skipped = 0, 0, 0
-    while plotted < PLOTGOAL:
-        rv = worker()
+    total, plotted, short, long = 0, 0, 0, 0
+    for c in targets():
+        rv = worker(c)
 
         if rv is PLOTTED:
             plotted += 1
-        elif rv is SKIPPED:
-            skipped += 1
+        elif rv is SHORT:
+            short += 1
+        elif rv is LONG:
+            long += 1
 
         total += 1
         if not total % 1000:
             elapsed = time.time() - t
-            print ("Points (plotted/skipped/total): %d/%d/%d (%.2f/s)" %
-                (plotted, skipped, total, plotted / elapsed))
+            print ("Points (plotted/short/long/total): %d/%d/%d/%d (%.2f/s)" %
+                (plotted, short, long, total, plotted / elapsed))
 
 except KeyboardInterrupt:
     print ("Total of %d points, skipped %d (%.2f%%) plotted %d (%.2f%%)" %
-        (total, skipped, skipped*100/total, plotted, plotted*100/total))
+        (total, short + long, (short + long) * 100 / total, plotted,
+         plotted * 100 / total))
 
 elapsed = time.time() - t
 print "Elapsed time: %.2fs (plotted %.2f/s)" % (elapsed, plotted/elapsed)
