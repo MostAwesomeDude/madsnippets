@@ -73,8 +73,14 @@ maxes = [max(max(j for j in i) for i in arr) for arr in arrays]
 
 print "Max depths are %r" % (maxes,)
 
+def sample(arr, i, j):
+    try:
+        return arr[i][j] + arr[i + 1][j] + arr[i][j + 1] + arr[i + 1][j + 1]
+    except:
+        return arr[i][j] * 4
+
 for (j, k) in product(xrange(w), xrange(h)):
-    values = [scale(arrays[i][j][k] / maxes[i]) for i in xrange(d)]
+    values = [scale(sample(arrays[i], j, k) / maxes[i] / 2) for i in xrange(d)]
 
     blue = values[0]
     green = values[1]
