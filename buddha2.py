@@ -11,6 +11,9 @@ import Image
 def clamp(x):
     return min(255, max(0, x))
 
+def scale(x):
+    return int(x * 255)
+
 def get_color(value):
     v = int(value * 255)
     if value > 8/64:
@@ -42,54 +45,46 @@ def lum(value):
 
 def load_file(path):
     pixels = pickle.load(open(path, "r"))
-    w, h = len(pixels), len(pixels[0])
-    print "Loaded %dx%d array of values!" % (w, h)
-    return pixels
+    d, w, h = len(pixels), len(pixels[0]), len(pixels[0][0])
+    print "Loaded %dx%dx%d array of values!" % (d, w, h)
+    return pixels, (d, w, h)
 
 first = sys.argv[1]
 filenames = sys.argv[2:]
 
-base = load_file(first)
-w = len(base)
-h = len(base[0])
+arrays, dwh = load_file(first)
+d, w, h = dwh
 
-print "Will use %dx%d for dimensions" % (w, h)
+print "Will use %dx%dx%d for dimensions" % dwh
 
 for filename in filenames:
-    pixels = load_file(filename)
-    if len(pixels) != w or len(pixels[0]) != h:
-        print "Discarding %r: Wrong size" % filename
+    data, dwh = load_file(filename)
+    if (d, w, h) != dwh:
+        print "Discarding %r: Wrong size %r" % (filename, dwh)
     else:
-        for i, j in product(xrange(w), xrange(h)):
-            base[i][j] += pixels[i][j]
+        for i, j, k in product(xrange(d), xrange(w), xrange(h)):
+            arrays[i][j][k] += data[i][j][k]
 
-out = Image.new("RGB",(w, h))
-
-maxdepth = 0
+out = Image.new("RGB", (w, h))
 
 print "Calculating max depth..."
 
-maxdepth = max(max(j for j in i) for i in base)
+maxes = [max(max(j for j in i) for i in arr) for arr in arrays]
 
-print "Max depth is %d" % maxdepth
+print "Max depths are %r" % (maxes,)
 
-print "Calculating mean depth..."
+for (j, k) in product(xrange(w), xrange(h)):
+    values = [scale(arrays[i][j][k] / maxes[i]) for i in xrange(d)]
 
-meandepth = sum(j for i in base for j in i) / (w * h)
+    blue = values[0]
+    green = values[1]
+    red = values[2]
+    violet = values[3]
 
-print "Mean depth is %f" % meandepth
+    blue += violet * 2
+    red += violet * 2
 
-print "Calculating median depth..."
-
-mediandepth = sorted(j for i in base for j in i)[w * h // 2]
-
-print "Median depth is %d" % mediandepth
-
-for (i, j) in product(xrange(w), xrange(h)):
-    value = base[i][j] / maxdepth
-    out.putpixel((i, j), get_color(value))
-    #out.putpixel((i, j), fair_color(value))
-    #out.putpixel((i, j), lum(value))
+    out.putpixel((j, k), (red, green, blue))
 
 print "Resampling..."
 
