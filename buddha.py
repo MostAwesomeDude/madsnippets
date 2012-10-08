@@ -32,7 +32,7 @@ else:
 WIDTH *= 2
 HEIGHT *= 2
 
-LOWER = 10
+LOWER = 5
 UPPER = 20000
 
 # This can't be smaller than 2.2e-16 or so. Not that you'd attempt that,
@@ -99,10 +99,13 @@ def targets():
             yield c
             yield complex(c.real, -c.imag)
 
-def plot(z, x):
+def plot(z, x, a):
     pixw = int((z.imag - MINW) * WIDTH/(MAXW-MINW))
     pixh = int((z.real - MINH) * HEIGHT/(MAXH-MINH))
-    pixels[pixw][pixh] += x
+    arrays[a][pixw][pixh] += x
+
+l = []
+from bisect import insort
 
 def worker(c):
 
@@ -113,14 +116,26 @@ def worker(c):
     if UPPER <= len(brots):
         return LONG
 
+    if len(brots) < 10:
+        a = 0
+    elif len(brots) < 100:
+        a = 1
+    elif len(brots) < 1000:
+        a = 2
+    else:
+        a = 3
+
+    insort(l, len(brots))
+
     for z in brots:
-        plot(z, 1)
+        plot(z, 1, a)
 
     return PLOTTED
 
 print "Making pixel array..."
 
-pixels = [[0 for j in xrange(HEIGHT)] for i in xrange(WIDTH)]
+arrays = [[[0 for j in xrange(HEIGHT)] for i in xrange(WIDTH)]
+          for k in xrange(4)]
 
 print "Getting started..."
 
@@ -143,6 +158,7 @@ try:
             elapsed = time.time() - t
             print ("Points (plotted/short/long/total): %d/%d/%d/%d (%.2f/s)" %
                 (plotted, short, long, total, plotted / elapsed))
+            print "Averages: %d/%d" % (l[len(l) // 3], l[len(l) * 2 // 3])
 
 except KeyboardInterrupt:
     print ("Total of %d points, skipped %d (%.2f%%) plotted %d (%.2f%%)" %
@@ -162,7 +178,7 @@ for i in xrange(1000):
 
 if pickle_name:
     print "Dumping..."
-    pickle.dump(pixels, open(pickle_name, "w"))
+    pickle.dump(arrays, open(pickle_name, "w"))
     print "Done!"
 else:
     print "Too many savefiles, couldn't dump."
