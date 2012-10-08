@@ -93,11 +93,14 @@ def ibrot(c):
             break
 
 def targets():
-    for i in xrange(500000):
-        c = complex(r.uniform(MINH, MAXH), r.uniform(0, MAXW))
-        if checkrange(c):
-            yield c
-            yield complex(c.real, -c.imag)
+    for x in xrange(HEIGHT):
+        for y in xrange(WIDTH):
+            real = MINH + (x * (MAXH - MINH)) / HEIGHT
+            imag = MINW + (y * (MAXW - MINW)) / WIDTH
+            c = complex(real, imag)
+            if checkrange(c):
+                yield c
+                yield complex(real, -imag)
 
 def plot(z, x, a):
     pixw = int((z.imag - MINW) * WIDTH/(MAXW-MINW))
@@ -158,7 +161,8 @@ try:
             elapsed = time.time() - t
             print ("Points (plotted/short/long/total): %d/%d/%d/%d (%.2f/s)" %
                 (plotted, short, long, total, plotted / elapsed))
-            print "Averages: %d/%d" % (l[len(l) // 3], l[len(l) * 2 // 3])
+            if l:
+                print "Averages: %d/%d" % (l[len(l) // 3], l[len(l) * 2 // 3])
 
 except KeyboardInterrupt:
     print ("Total of %d points, skipped %d (%.2f%%) plotted %d (%.2f%%)" %
