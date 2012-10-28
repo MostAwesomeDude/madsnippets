@@ -1,8 +1,10 @@
 module Main where
 
+import Control.Monad
 import Data.Char
 import Data.List
 import qualified Data.Map as M
+import System.Environment
 
 type Anagrams = M.Map String [String]
 
@@ -18,9 +20,16 @@ addWord s m = let
 anagrams :: [String] -> Anagrams
 anagrams = foldr addWord M.empty
 
+findWords :: String -> Anagrams -> [String]
+findWords s = M.findWithDefault [] $ normalize s
+
+makeAnagrams :: String -> Anagrams
+makeAnagrams = anagrams . lines
+
 main :: IO ()
 main = do
     stuff <- readFile "/usr/share/dict/words"
+    targets <- getArgs
     let m = anagrams $ lines stuff
-        found = M.findWithDefault [] (normalize "traps") m
-    putStrLn $ "Found words: " ++ show found
+    forM_ targets $ \word ->
+        putStrLn $ "Found words: " ++ show (findWords word m)
