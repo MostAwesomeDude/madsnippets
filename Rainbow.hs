@@ -6,6 +6,7 @@ import Control.Monad.State
 import Data.List
 import Data.List.Split
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Debug.Trace
 
 data Color = None | R | O | Y | G | B | V
@@ -17,7 +18,7 @@ type Coord = (Int, Int)
 type Slot = (Height, Color)
 type Board = M.Map Coord Slot
 
-type Solver = StateT (Board, [Slot]) []
+type Solver = StateT (Board, S.Set Slot) []
 
 readPuzzle :: String -> [Height]
 readPuzzle s = do
@@ -40,8 +41,8 @@ showBoard b = unlines ls
         results = map show colors
         colors = map snd . map snd . sort $ M.toList b
 
-initialState :: [Slot]
-initialState = [(h, c) | h <- [One .. Six], c <- [R .. V] ]
+initialState :: S.Set Slot
+initialState = S.fromList [(h, c) | h <- [One .. Six], c <- [R .. V] ]
 
 colorAt :: Coord -> Solver Color
 colorAt c = do
@@ -60,21 +61,22 @@ unique (x, y) = do
         color' <- colorAt (x, y')
         guard $ color /= color'
 
-updateBoard :: Coord -> Slot -> (Board, [Slot]) -> (Board, [Slot])
+updateBoard :: Coord -> Slot -> (Board, S.Set Slot) -> (Board, S.Set Slot)
 updateBoard c (height, color) board =
-    board & _1 . at c . _Just . _2 .~ color & _2 %~ filter (/= (height, color))
+    board & _1 . at c . _Just . _2 .~ color & _2 %~ S.delete (height, color)
 
 derp x = traceShow x x
 
 assignCoord :: Coord -> Solver ()
 assignCoord c = do
     Just (h, color) <- use $ _1 . at c
-    colors <- uses _2 $ map snd . filter ((h ==) . fst)
-    guard $ not (null colors)
+    colors <- uses _2 $ S.map snd . S.filter ((h ==) . fst)
+    guard $ not (S.null colors)
     board <- use id
     -- Update each part of the state and return them all with a custom StateT
     -- invocation.
-    let states = map (\color' -> ((), updateBoard c (h, color') board)) colors
+    let states = map (\color' -> ((), updateBoard c (h, color') board)) $
+                    S.toList colors
     StateT (\_ -> states)
     -- And now ensure that we're not propagating duplicate states.
     unique c
