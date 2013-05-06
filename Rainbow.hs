@@ -39,7 +39,7 @@ showBoard b = unlines ls
         ls = map unwords ws
         ws = chunksOf 6 results
         results = map show colors
-        colors = map snd . map snd . sort $ M.toList b
+        colors = map (snd . snd) . sort $ M.toList b
 
 initialState :: S.Set Slot
 initialState = S.fromList [(h, c) | h <- [One .. Six], c <- [R .. V] ]
@@ -49,7 +49,7 @@ colorAt c = do
     mval <- use $ _1 . at c
     case mval of
         Just val -> return $ snd val
-        Nothing -> StateT (\s -> [])
+        Nothing -> StateT (const [])
 
 unique :: Coord -> Solver ()
 unique (x, y) = do
@@ -73,8 +73,7 @@ assignCoord c = do
     colors <- uses _2 $ S.map snd . S.filter ((h ==) . fst)
     guard $ not (S.null colors)
     board <- use id
-    -- Update each part of the state and return them all with a custom StateT
-    -- invocation.
+    -- Update each part of the state.
     let states = map (\color' -> ((), updateBoard c (h, color') board)) $
                     S.toList colors
     StateT (\_ -> states)
@@ -94,4 +93,4 @@ main = do
     print board
     putStr $ showBoard board
     let solved = execStateT solve (board, initialState)
-    mapM_ putStr (map (showBoard . fst) solved)
+    mapM_ (putStr . showBoard . fst) solved
