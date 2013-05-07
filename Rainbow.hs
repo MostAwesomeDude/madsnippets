@@ -1,5 +1,9 @@
 module Main where
 
+-- A solver for the "Rainbow" 36 Cube puzzle.
+-- I got inspired after seeing one at work and being confident that a simple
+-- solution would be searchable. I also needed to buff up my Haskell chops.
+
 import Control.Lens
 import Control.Monad
 import Control.Monad.State
