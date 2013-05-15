@@ -11,6 +11,8 @@ import Data.List
 import Data.List.Split
 import qualified Data.Map as M
 
+import Debug.Trace
+
 data Color = None | R | O | Y | G | B | V
     deriving (Enum, Eq, Ord, Show)
 data Height = One | Two | Three | Four | Five | Six
@@ -59,34 +61,38 @@ colorAt c = do
         Just val -> return $ snd val
         Nothing -> StateT (const [])
 
+goodRow :: [Color] -> Bool
+goodRow cs = all pred $ zip cs' (tail cs')
+    where
+    cs' = sort cs
+    pred (None, None) = True
+    pred (x, y) = x /= y
+
 unique :: Coord -> Solver ()
 unique (x, y) = do
-    color <- colorAt (x, y)
-    forM_ (filter (x /=) [0 .. 5]) $ \x' -> do
-        color' <- colorAt (x', y)
-        guard $ color /= color'
-    forM_ (filter (y /=) [0 .. 5]) $ \y' -> do
-        color' <- colorAt (x, y')
-        guard $ color /= color'
+    cs <- forM [0 .. 5] $ \y' -> colorAt (x, y')
+    guard $ goodRow cs
+    cs' <- forM [0 .. 5] $ \x' -> colorAt (x', y)
+    guard $ goodRow cs'
+    -- zoom _1 $ modify (\b -> trace (showBoard b) b)
 
 assignCoord :: Coord -> Solver ()
 assignCoord c = do
-    Just (h, color) <- use $ _1 . at c
-    colors <- use _2
+    (map, colors) <- get
+    let Just (h, color) = map ^. at c
     -- Pull out the different possibilities.
     ((h', color'), colors') <- lift $ withEach colors
     -- Guard away the ones that we don't like.
     guard $ h == h'
     -- Update the state.
-    _1 . at c . _Just . _2 .= color'
-    _2 .= colors'
+    put (M.insert c (h, color') map, colors')
     -- And now ensure that we're not propagating duplicate states.
-    -- unique c
+    unique c
 
 solve :: Solver ()
 solve = forM_ [0 .. 5] $ \x ->
     forM_ [0 .. 5] $ \y ->
-        assignCoord (x, y)
+        traceShow (x, y) $ assignCoord (x, y)
 
 main :: IO ()
 main = do
