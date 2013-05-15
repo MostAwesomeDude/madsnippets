@@ -78,8 +78,9 @@ assignCoord c = do
     guard $ h == h'
     -- Update the state.
     _1 . at c . _Just . _2 .= color'
+    _2 .= colors'
     -- And now ensure that we're not propagating duplicate states.
-    unique c
+    -- unique c
 
 solve :: Solver ()
 solve = forM_ [0 .. 5] $ \x ->
@@ -94,7 +95,8 @@ main = do
     print board
     putStr $ showBoard board
     let solved = execStateT solve (board, initialState)
-    -- putStr $ "There are " ++ show (length solved) ++ " solutions."
-    forM_ (zip solved [0 ..]) $ \((b, _), i) -> do
-        putStr $ "Solution " ++ show i ++ ":\n"
-        putStr $ showBoard b
+    case solved of
+        solution:_ -> do
+            putStr $ "Solution:\n"
+            putStr . showBoard . fst $ solution
+        [] -> putStr "No solutions."
