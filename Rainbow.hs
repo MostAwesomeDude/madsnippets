@@ -45,8 +45,9 @@ showBoard b = unlines ls
     where
         ls = map unwords ws
         ws = chunksOf 6 results
-        results = map show colors
-        colors = map (snd . snd) . sort $ M.toList b
+        results = map showPair colors
+        colors = map snd . sort $ M.toList b
+        showPair (h, c) = show (fromEnum h) ++ show c
 
 initialState :: [Slot]
 initialState = [(h, c) | h <- [One .. Six], c <- [R .. V]]
