@@ -70,7 +70,24 @@ def derivative(f):
     return inner
 
 
+@z
+def compact(f):
+    def inner(l):
+        # XXX not all compactions are listed.
+        if isinstance(l, Sequence):
+            if Empty in l:
+                return Empty
+        if isinstance(l, Union):
+            if l.first == Empty:
+                return f(l.second)
+            elif l.second == Empty:
+                return f(l.first)
+        return l
+    return inner
+
+
 def matches(l, s):
     for c in s:
-        l = derivative(l, c)
+        l = compact(derivative(l, c))
+        print l
     return nullable(l)
