@@ -8,7 +8,8 @@ def key(args, kwargs):
 def z(f):
     cache = {}
     def first(x):
-        def second(*args, **kwargs):
+        # Name this 'z' so that it's easy to see in repr().
+        def z(*args, **kwargs):
             k = key(args, kwargs)
             if k in cache:
                 v = cache[k]
@@ -16,7 +17,7 @@ def z(f):
                 v = x(x)(*args, **kwargs)
                 cache[k] = v
             return v
-        return f(second)
+        return f(z)
     return first(first)
 
 
@@ -28,19 +29,50 @@ class Named(object):
         return self.name
 
 
+class Lazy(object):
+    value = None
+
+    def __init__(self, f, *args):
+        self._thunk = f, args
+
+    def __repr__(self):
+        return "%r(%r)" % self._thunk
+
+    def __hash__(self):
+        # Hash the only thing that is constant and hashable on this class.
+        return hash(id(self))
+
+    def force(self):
+        if self.value is None:
+            f, args = self._thunk
+            self.value = f(*args)
+
+
+def force(value):
+    while isinstance(value, Lazy):
+        value.force()
+        value = value.value
+    return value
+
+
 Empty = Named("Empty")
 Null = namedtuple("Null", "ts")
 Exactly = namedtuple("Exactly", "x")
+Red = namedtuple("Red", "l, f")
 Cat = namedtuple("Cat", "first, second")
 Alt = namedtuple("Alt", "first, second")
 Rep = namedtuple("Rep", "l")
-Red = namedtuple("Red", "l, f")
 Delta = namedtuple("Delta", "l")
+
+
+def const(x):
+    return x
 
 
 @z
 def derivative(f):
     def inner(l, c):
+        l = force(l)
         if l is Empty or isinstance(l, Null) or isinstance(l, Delta):
             return Empty
         elif isinstance(l, Exactly):
@@ -49,12 +81,14 @@ def derivative(f):
             else:
                 return Empty
         elif isinstance(l, Cat):
+            # Must be lazy.
             return Alt(
-                    Cat(f(l.first, c), l.second),
-                    Cat(Delta(l.first), f(l.second, c)),
+                    Lazy(Cat, Lazy(f, l.first, c), Lazy(const, l.second)),
+                    Lazy(Cat, Lazy(Delta, l.first), Lazy(f, l.second, c)),
                 )
         elif isinstance(l, Alt):
-            return Alt(f(l.first, c), f(l.second, c))
+            # Must be lazy.
+            return Alt(Lazy(f, l.first, c), Lazy(f, l.second, c))
         elif isinstance(l, Rep):
             return Red(Cat(f(l.l, c), l), lambda x: (x,))
         elif isinstance(l, Red):
@@ -66,6 +100,7 @@ def derivative(f):
 @z
 def compact(f):
     def inner(l):
+        l = force(l)
         if isinstance(l, Cat):
             if Empty in l:
                 return Empty
@@ -73,23 +108,27 @@ def compact(f):
                 return Red(f(l.second), lambda xs: (l.first.ts, xs))
             if isinstance(l.second, Null):
                 return Red(f(l.first), lambda xs: (xs, l.second.ts))
-            return Cat(f(l.first), f(l.second))
+            # Must be lazy.
+            return Cat(Lazy(f, l.first), Lazy(f, l.second))
         if isinstance(l, Alt):
             if l.first == Empty:
                 return f(l.second)
             elif l.second == Empty:
                 return f(l.first)
-            return Alt(f(l.first), f(l.second))
+            # Must be lazy.
+            return Alt(Lazy(f, l.first), Lazy(f, l.second))
         if isinstance(l, Rep):
             if l.x is Empty:
                 return Null(())
-            return Rep(f(l.l))
+            # Must be lazy.
+            return Rep(Lazy(f, l.l))
         if isinstance(l, Red):
             if isinstance(l.l, Null):
                 return Null(frozenset([l.f(t) for t in l.l.ts]))
             return Red(f(l.l), l.f)
         if isinstance(l, Delta):
-            return Delta(f(l.l))
+            # Must be lazy.
+            return Delta(Lazy(f, l.l))
         return l
     return inner
 
@@ -97,6 +136,7 @@ def compact(f):
 @z
 def trees(f):
     def inner(l):
+        l = force(l)
         if l is Empty:
             return set()
         elif isinstance(l, Null):
@@ -126,3 +166,12 @@ def parses(l, s):
 
 def matches(l, s):
     return bool(parses(l, s))
+
+
+def string(s):
+    if not s:
+        return Null(set())
+    parser = Exactly(s[0])
+    for c in s[1:]:
+        parser = Cat(parser, Exactly(c))
+    return parser
