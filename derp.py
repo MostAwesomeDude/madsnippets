@@ -20,52 +20,45 @@ def z(f):
     return first(first)
 
 
-Empty = object()
-Epsilon = object()
+class Named(object):
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return self.name
+
+
+Empty = Named("Empty")
+Null = namedtuple("Null", "ts")
 Exactly = namedtuple("Exactly", "x")
-Sequence = namedtuple("Sequence", "first, second")
-Union = namedtuple("Union", "first, second")
-Repeat = namedtuple("Repeat", "x")
-
-
-@z
-def nullable(f):
-    def inner(l):
-        if l is Empty:
-            return False
-        elif l is Epsilon:
-            return True
-        elif isinstance(l, Exactly):
-            return False
-        elif isinstance(l, Sequence):
-            return f(l.first) and f(l.second)
-        elif isinstance(l, Union):
-            return f(l.first) or f(l.second)
-        elif isinstance(l, Repeat):
-            return True
-        assert False, "Can't classify %r" % l
-    return inner
+Cat = namedtuple("Cat", "first, second")
+Alt = namedtuple("Alt", "first, second")
+Rep = namedtuple("Rep", "l")
+Red = namedtuple("Red", "l, f")
+Delta = namedtuple("Delta", "l")
 
 
 @z
 def derivative(f):
     def inner(l, c):
-        if l is Empty or l is Epsilon:
+        if l is Empty or isinstance(l, Null) or isinstance(l, Delta):
             return Empty
         elif isinstance(l, Exactly):
             if l.x == c:
-                return Epsilon
+                return Null((c,))
             else:
                 return Empty
-        elif isinstance(l, Sequence):
-            if nullable(l.first):
-                return Union(Sequence(f(l.first, c), l.second), f(l.second, c))
-            else:
-                return Sequence(f(l.first, c), l.second)
-        elif isinstance(l, Union):
-            return Union(f(l.first, c), f(l.second, c))
-        elif isinstance(l, Repeat):
-            return Sequence(f(l.x, c), l)
+        elif isinstance(l, Cat):
+            return Alt(
+                    Cat(f(l.first, c), l.second),
+                    Cat(Delta(l.first), f(l.second, c)),
+                )
+        elif isinstance(l, Alt):
+            return Alt(f(l.first, c), f(l.second, c))
+        elif isinstance(l, Rep):
+            return Red(Cat(f(l.l, c), l), lambda x: (x,))
+        elif isinstance(l, Red):
+            return Red(f(l.l, c), l.f)
         assert False, "Can't classify %r" % l
     return inner
 
@@ -73,21 +66,63 @@ def derivative(f):
 @z
 def compact(f):
     def inner(l):
-        # XXX not all compactions are listed.
-        if isinstance(l, Sequence):
+        if isinstance(l, Cat):
             if Empty in l:
                 return Empty
-        if isinstance(l, Union):
+            if isinstance(l.first, Null):
+                return Red(f(l.second), lambda xs: (l.first.ts, xs))
+            if isinstance(l.second, Null):
+                return Red(f(l.first), lambda xs: (xs, l.second.ts))
+            return Cat(f(l.first), f(l.second))
+        if isinstance(l, Alt):
             if l.first == Empty:
                 return f(l.second)
             elif l.second == Empty:
                 return f(l.first)
+            return Alt(f(l.first), f(l.second))
+        if isinstance(l, Rep):
+            if l.x is Empty:
+                return Null(())
+            return Rep(f(l.l))
+        if isinstance(l, Red):
+            if isinstance(l.l, Null):
+                return Null(frozenset([l.f(t) for t in l.l.ts]))
+            return Red(f(l.l), l.f)
+        if isinstance(l, Delta):
+            return Delta(f(l.l))
         return l
     return inner
 
 
-def matches(l, s):
+@z
+def trees(f):
+    def inner(l):
+        if l is Empty:
+            return set()
+        elif isinstance(l, Null):
+            return l.ts
+        elif isinstance(l, Delta):
+            return f(l.l)
+        elif isinstance(l, Exactly):
+            return set()
+        elif isinstance(l, Alt):
+            return f(l.first) | f(l.second)
+        elif isinstance(l, Cat):
+            return set(zip(f(l.first), f(l.second)))
+        elif isinstance(l, Red):
+            return set([l.f(x) for x in f(l.l)])
+        elif isinstance(l, Rep):
+            return set()
+        assert False, "Can't classify %r" % l
+    return inner
+
+
+def parses(l, s):
     for c in s:
         l = compact(derivative(l, c))
         print l
-    return nullable(l)
+    return trees(l)
+
+
+def matches(l, s):
+    return bool(parses(l, s))
