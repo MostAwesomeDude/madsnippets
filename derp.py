@@ -1,24 +1,54 @@
 from collections import namedtuple
+from functools import wraps
 
 
 def key(args, kwargs):
     return args, frozenset(kwargs.iteritems())
 
 
-def z(f):
+def kleene(bottom):
+    """
+   Kleene's fixed point.
+
+   Ascend from a bottom value to a recursively-defined value. Usage is
+   similar to a general fixed-point combinator, like U, Y, or Z, but with
+   memoization and an explicit bottom value. This decorator can thus be used
+   to deal with ill-founded recursion, as long as the values involved are
+   sufficiently pure; if this decorator sees a value twice under the same
+   circumstances, it will "bottom out" and ensure that the computation
+   terminates eventually.
+   """
+
+    def first(f):
+        cache = {}
+        def second(x):
+            def z(*args, **kwargs):
+                k = key(args, kwargs)
+                if k in cache:
+                    v = cache[k]
+                else:
+                    cache[k] = bottom
+                    v = x(x)(*args, **kwargs)
+                    cache[k] = v
+                return v
+            return f(z)
+        return second(second)
+    return first
+
+
+def memo(f):
     cache = {}
-    def first(x):
-        # Name this 'z' so that it's easy to see in repr().
-        def z(*args, **kwargs):
-            k = key(args, kwargs)
-            if k in cache:
-                v = cache[k]
-            else:
-                v = x(x)(*args, **kwargs)
-                cache[k] = v
-            return v
-        return f(z)
-    return first(first)
+
+    @wraps(f)
+    def inner(*args, **kwargs):
+        k = key(args, kwargs)
+        if k in cache:
+            v = cache[k]
+        else:
+            v = f(*args, **kwargs)
+            cache[k] = v
+        return v
+    return inner
 
 
 class Named(object):
@@ -55,6 +85,7 @@ def force(value):
     return value
 
 
+Patch = Named("Patch")
 Empty = Named("Empty")
 Null = namedtuple("Null", "ts")
 Exactly = namedtuple("Exactly", "x")
@@ -69,71 +100,67 @@ def const(x):
     return x
 
 
-@z
-def derivative(f):
-    def inner(l, c):
-        l = force(l)
-        if l is Empty or isinstance(l, Null) or isinstance(l, Delta):
+@memo
+def derivative(l, c):
+    l = force(l)
+    if l is Empty or isinstance(l, Null) or isinstance(l, Delta):
+        return Empty
+    elif isinstance(l, Exactly):
+        if l.x == c:
+            return Null(frozenset([c]))
+        else:
             return Empty
-        elif isinstance(l, Exactly):
-            if l.x == c:
-                return Null((c,))
-            else:
-                return Empty
-        elif isinstance(l, Cat):
-            # Must be lazy.
-            return Alt(
-                    Lazy(Cat, Lazy(f, l.first, c), Lazy(const, l.second)),
-                    Lazy(Cat, Lazy(Delta, l.first), Lazy(f, l.second, c)),
-                )
-        elif isinstance(l, Alt):
-            # Must be lazy.
-            return Alt(Lazy(f, l.first, c), Lazy(f, l.second, c))
-        elif isinstance(l, Rep):
-            return Red(Cat(f(l.l, c), l), lambda x: (x,))
-        elif isinstance(l, Red):
-            return Red(f(l.l, c), l.f)
-        assert False, "Can't classify %r" % l
-    return inner
+    elif isinstance(l, Cat):
+        # Must be lazy.
+        return Alt(
+                Lazy(Cat, Lazy(derivative, l.first, c), Lazy(const, l.second)),
+                Lazy(Cat, Lazy(Delta, l.first), Lazy(derivative, l.second, c)),
+            )
+    elif isinstance(l, Alt):
+        # Must be lazy.
+        return Alt(Lazy(derivative, l.first, c), Lazy(derivative, l.second, c))
+    elif isinstance(l, Rep):
+        return Red(Cat(derivative(l.l, c), l), lambda x: (x,))
+    elif isinstance(l, Red):
+        return Red(derivative(l.l, c), l.f)
+    assert False, "Can't classify %r" % l
 
 
-@z
-def compact(f):
-    def inner(l):
-        l = force(l)
-        if isinstance(l, Cat):
-            if Empty in l:
-                return Empty
-            if isinstance(l.first, Null):
-                return Red(f(l.second), lambda xs: (l.first.ts, xs))
-            if isinstance(l.second, Null):
-                return Red(f(l.first), lambda xs: (xs, l.second.ts))
-            # Must be lazy.
-            return Cat(Lazy(f, l.first), Lazy(f, l.second))
-        if isinstance(l, Alt):
-            if l.first == Empty:
-                return f(l.second)
-            elif l.second == Empty:
-                return f(l.first)
-            # Must be lazy.
-            return Alt(Lazy(f, l.first), Lazy(f, l.second))
-        if isinstance(l, Rep):
-            if l.x is Empty:
-                return Null(())
-            # Must be lazy.
-            return Rep(Lazy(f, l.l))
-        if isinstance(l, Red):
-            if isinstance(l.l, Null):
-                return Null(frozenset([l.f(t) for t in l.l.ts]))
-            return Red(f(l.l), l.f)
-        if isinstance(l, Delta):
-            # Must be lazy.
-            return Delta(Lazy(f, l.l))
-        return l
-    return inner
+@memo
+def compact(l):
+    l = force(l)
+    if isinstance(l, Cat):
+        if Empty in l:
+            return Empty
+        if isinstance(l.first, Null):
+            return Red(compact(l.second), lambda x: set([l.first.ts + x]))
+        if isinstance(l.second, Null):
+            return Red(compact(l.first), lambda x: set([x + l.second.ts]))
+        # Must be lazy.
+        return Cat(Lazy(compact, l.first), Lazy(compact, l.second))
+    if isinstance(l, Alt):
+        if l.first == Empty:
+            return compact(l.second)
+        elif l.second == Empty:
+            return compact(l.first)
+        # Must be lazy.
+        return Alt(Lazy(compact, l.first), Lazy(compact, l.second))
+    if isinstance(l, Rep):
+        if l.x is Empty:
+            return Null(frozenset())
+        # Must be lazy.
+        return Rep(Lazy(compact, l.l))
+    if isinstance(l, Red):
+        if isinstance(l.l, Null):
+            return Null(frozenset([l.f(t) for t in l.l.ts]))
+        return Red(compact(l.l), l.f)
+    if isinstance(l, Delta):
+        # Must be lazy.
+        return Delta(Lazy(compact, l.l))
+    return l
 
 
-@z
+@kleene(set())
 def trees(f):
     def inner(l):
         l = force(l)
@@ -175,3 +202,23 @@ def string(s):
     for c in s[1:]:
         parser = Cat(parser, Exactly(c))
     return parser
+
+
+def patch(lazy, obj):
+    f, args = lazy._thunk
+    if args[0] is Patch:
+        args = obj,
+        lazy._thunk = f, args
+
+
+def tie(obj):
+    s = [obj]
+    while s:
+        node = s.pop()
+        if not isinstance(node, (Cat, Alt, Rep, Delta)):
+            continue
+        for item in node:
+            if isinstance(item, Lazy):
+                patch(item, obj)
+            elif item is not obj:
+                s.append(item)
