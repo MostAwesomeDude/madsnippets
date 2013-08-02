@@ -175,9 +175,11 @@ def trees(f):
         elif isinstance(l, Alt):
             return f(l.first) | f(l.second)
         elif isinstance(l, Cat):
-            return set(zip(f(l.first), f(l.second)))
+            # Use a genexp to not waste too much space.
+            return set((x, y) for x in f(l.first) for y in f(l.second))
         elif isinstance(l, Red):
-            return set([l.f(x) for x in f(l.l)])
+            # Same idea here.
+            return set(l.f(x) for x in f(l.l))
         elif isinstance(l, Rep):
             return set()
         assert False, "Can't classify %r" % l
